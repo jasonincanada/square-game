@@ -1,137 +1,112 @@
+{- Generate all Partridge Squares for any N using a hylomorphism
+
+   Checkpoint 1:  First attempt at the coalgebra, I haven't run this on input yet but it type-checks!
+
+-}
+
+{-# Language DeriveFunctor #-}
+{-# Language TupleSections #-}
+
 module Main where
 
-import Control.Applicative (many, (<|>))
-import Control.Monad       (guard, replicateM)
-import Data.Char           (digitToInt, isDigit)
-import Data.List           (sort)
-import Data.Maybe          (maybe)
-import NanoParsec          (Parser(..), char, digit, number, run, space, string)
-import qualified Data.Map as M
+import Data.Char (chr)
+import Data.List ((\\), delete, nub)
+import qualified Data.Map.Strict as M
 
-
--- I've manually copied just the first solution from Munklar's gigantic file
--- of all solutions, to test parsing of an individual solution into our format
 main :: IO ()
 main = do
-  file <- readFile "solution1.txt"
-  let solutions = run parseFile file
-  let map       = squareToMap $ snd $ head solutions
-  let bs        = blocks map
-  mapM_ (putStrLn . show) bs
+  print "coalgebra"
 
-type Digit    = Int
-type Square   = [[Digit]]
-type Solution = (Int, Square)
+-- Manually set n=3 for now and find the side length
+n    = 3
+side = n*(n+1) `div` 2
 
-cell :: Parser Digit
-cell = digitToInt <$> (digit <* space)
+-- Types
+type Tile   = (Int, Int)            -- Row/column of a 1x1 cell on the game board
+type Square = Int                   -- Represent a square by its side length
+type Board  = M.Map Tile Square     -- A list of placed squares, keyed on the row/col
+                                    -- of their upper left corner
 
-rowOfDigits :: Parser [Digit]
-rowOfDigits = replicateM 36 cell <* nl
+-- The collection of starting squares (not a set--we have many squares of the same size)
+squares :: [Square]
+squares = concat $ map (\i -> replicate i i) [1,2 .. n]
 
-square :: Parser Square
-square = replicateM 36 rowOfDigits
-
-floatingNumber, commaNumber :: Parser String
-floatingNumber = many (digit <|> char '.')
-commaNumber    = many (digit <|> char ',')
-
-solution :: Parser Solution
-solution = do
-  string "Solution #"
-  id <- number
-  string " is Configuration #" >> commaNumber
-  string " found in " >> floatingNumber
-  string " minutes" >> nl
-  s <- square
-  return (id, s)
-
-parseFile :: Parser [Solution]
-parseFile = do
-  string "Solution for N = 8" >> nl >> nl
-  squares <- many (solution <* nl)
-  string "Tried " >> commaNumber
-  string " configurations in " >> floatingNumber
-  string " minutes" >> nl
-  return squares
-
-nl = char '\n'
+-- All grid positions on the board
+tiles :: [Tile]
+tiles = [ (row, col) | row <- [0,1 .. side-1],
+                       col <- [0,1 .. side-1]]
 
 
-type Pos       = (Int, Int)
-type SquareMap = M.Map Pos Digit
-type Block     = (Pos, Digit)
+-- Our functor, primed for use in recursion schemes.  NodeF is a node in our trie representing
+-- the placement of a square at a tile position. The a represents sub-tries where placements
+-- continue with one fewer square of this node's square size and the remainder of available tiles
+data TrieF a = NodeF [(Tile, Square, a)]
+               deriving (Functor)
 
-squareToMap :: Square -> M.Map Pos Digit
-squareToMap square = M.fromList list
+-- The fixed point of a functor expressed in Haskell's type system
+newtype Fix f = Fix { out :: f (Fix f) }
+
+type Coalgebra f a = a -> f a
+
+-- Branch a node into all possible sub-nodes
+coalgebra :: Coalgebra TrieF ([Tile], [Square])
+coalgebra (tiles, [])      = NodeF []
+coalgebra (tiles, squares) = NodeF subs
   where
-    list   = zip coords (concat square)
-    coords = [ (i `div` side, i `mod` side) | i <- [0..side*side-1] ]
-    side   = 36
+    subs = [ place square tile span | tile   <- tiles,
+                                      square <- unique squares,
 
--- Recursively get all the blocks from the square map
-blocks :: SquareMap -> [Block]
-blocks smap = case nextBlock smap of
-                Nothing             -> []
-                Just (block, smap') -> block : blocks smap'
+                                      let (row, col) = tile,
+                                      let span       = [ (row+r, col+c) | r <- [0..square-1],
+                                                                          c <- [0..square-1]],
 
-nextBlock :: SquareMap -> Maybe (Block, SquareMap)
-nextBlock smap 
-  | M.size smap == 0 = Nothing
-  | otherwise        = Just (block, smap')
+                                      all (`elem` tiles) span ]
+
+    place :: Square -> Tile -> [Tile] -> (Tile, Square, ([Tile], [Square]))
+    place square tile span = (tile, square, (remainingTiles, remainingSquares))
+      where
+        remainingTiles   = tiles \\ span
+        remainingSquares = delete square squares
+
+    unique = Data.List.nub
+
+
+-------------------------------
+-- Visualization --------------
+-------------------------------
+
+-- A Board only contains the list of placed squares and their upper/left corners, so convert it
+-- to a map that tracks the square number at each individual tile (0 if nothing placed there)
+render :: Board -> M.Map Tile Square
+render board = merged
   where
-    block      = (coord, digit)
+    merged = M.union placed blanks
+    placed = M.fromList $ concatMap expand (M.toList board)
+    blanks = M.fromList $ (,0) <$> tiles
 
-    -- Keys are returned in order already, so just pick the first
-    coord      = head $ M.keys smap
+    --     :: a -> f a (!)
+    expand :: (Tile, Square) -> [(Tile, Square)]
+    expand ((row, col), square) = [ ((row+r, col+c), square) | r <- [0..square-1],
+                                                               c <- [0..square-1]]
 
-    -- Get the digit at the coordinate position
-    digit      = smap M.! coord
+-- Display a board in ASCII
+display :: Board -> String
+display board = unlines [[ letter (row, col) | col <- [0 .. side-1]]
+                                             | row <- [0 .. side-1]]
+    where
+      letter pos = let tile = tiled M.! pos
+                   in  if tile == 0
+                       then '-'
+                       else chr (48 + tile)
 
-    -- These are all the individual cells in the block
-    swath      = M.fromList [ ((row+r, col+c), digit) | r <- [0..digit-1],
-                                                        c <- [0..digit-1] ]
-    (row, col) = coord
-
-    -- The new map has these cells removed (so we don't keep picking the same block)
-    smap'      = smap M.\\ swath
+      tiled      = render board
 
 {-
-  λ> main
-  ((0,0),7)
-  ((0,7),7)
-  ((0,14),7)
-  ((0,21),7)
-  ((0,28),8)
-  ((7,0),8)
-  ((7,8),8)
-  ((7,16),6)
-  ((7,22),6)
-  ((8,28),8)
-  ((13,16),4)
-  ((13,20),8)
-  ((15,0),5)
-  ((15,5),5)
-  ((15,10),6)
-  ((16,28),8)
-  ((17,16),4)
-  ((20,0),3)
-  ((20,3),6)
-  ((20,9),1)
-  ((21,9),8)
-  ((21,17),8)
-  ((21,25),3)
-  ((23,0),3)
-  ((24,25),5)
-  ((24,30),6)
-  ((26,0),4)
-  ((26,4),5)
-  ((29,9),7)
-  ((29,16),7)
-  ((29,23),7)
-  ((30,0),4)
-  ((30,30),6)
-  ((31,4),5)
-  ((34,0),2)
-  ((34,2),2)
+  λ> putStrLn $ display (M.fromList [((0,0), 3), ((3,3), 2)])
+  333---
+  333---
+  333---
+  ---22-
+  ---22-
+  ------
 -}
