@@ -2,6 +2,10 @@
 
    Checkpoint 1:  First attempt at the coalgebra, I haven't run this on input yet but it type-checks!
 
+   Revision: We don't need to iterate over all possible tiles, only the upper-left-most: If
+             we've tried all square sizes for that tile and didn't find one that fit, that
+             position will never be tiled, so the board can't be a Partridge Square
+
 -}
 
 {-# Language DeriveFunctor #-}
@@ -53,12 +57,13 @@ coalgebra :: Coalgebra TrieF ([Tile], [Square])
 coalgebra (tiles, [])      = NodeF []
 coalgebra (tiles, squares) = NodeF subs
   where
-    subs = [ place square tile span | tile   <- tiles,
-                                      square <- unique squares,
+    tile       = head tiles
+    (row, col) = tile
 
-                                      let (row, col) = tile,
-                                      let span       = [ (row+r, col+c) | r <- [0..square-1],
-                                                                          c <- [0..square-1]],
+    subs = [ place square tile span | square <- unique squares,
+
+                                      let span = [ (row+r, col+c) | r <- [0..square-1],
+                                                                    c <- [0..square-1]],
 
                                       all (`elem` tiles) span ]
 
