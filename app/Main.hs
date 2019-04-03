@@ -1,10 +1,20 @@
 {- Generate all Partridge Squares for any N using a hylomorphism
 
-   Checkpoint 1:  First attempt at the coalgebra, I haven't run this on input yet but it type-checks!
+   Checkpoint 1: First attempt at the coalgebra, I haven't run this on input yet
+                 but it type-checks!
 
-   Revision: We don't need to iterate over all possible tiles, only the upper-left-most: If
-             we've tried all square sizes for that tile and didn't find one that fit, that
-             position will never be tiled, so the board can't be a Partridge Square
+   Checkpoint 2: Algebra added and it appears to work. Setting n=2 we see all possible
+                 failed attempts and no successful ones (recall the first complete
+                 Partridge Squares start at n=8)
+
+                 λ> main
+                 122
+                 -22
+                 ---
+
+                 221
+                 22-
+                 ---
 
 -}
 
@@ -19,10 +29,10 @@ import qualified Data.Map.Strict as M
 
 main :: IO ()
 main = do
-  print "coalgebra"
+  mapM_ (putStrLn . display) $ hylo coalgebra algebra (tiles, squares)
 
--- Manually set n=3 for now and find the side length
-n    = 3
+-- Manually set n=2 for now and find the side length
+n    = 2
 side = n*(n+1) `div` 2
 
 -- Types
@@ -74,6 +84,19 @@ coalgebra (tiles, squares) = NodeF subs
         remainingSquares = delete square squares
 
     unique = Data.List.nub
+
+
+type Algebra f a = f a -> a
+
+algebra :: Algebra TrieF [Board]
+algebra (NodeF []            ) = [M.empty]
+algebra (NodeF (placement:ps)) = add placement ++ concat (fmap add ps)
+  where
+    add :: (Tile, Square, [Board]) -> [Board]
+    add (tile, square, boards) = fmap (M.insert tile square) boards
+
+hylo :: Functor f => Coalgebra f a -> Algebra f b -> a -> b
+hylo coalg alg = alg . (fmap $ hylo coalg alg) . coalg
 
 
 -------------------------------
