@@ -1,0 +1,67 @@
+	Wed Apr  3 20:41 2019 Time and Allocation Profiling Report  (Final)
+
+	   Main +RTS -p -RTS
+
+	total time  =       48.52 secs   (48516 ticks @ 1000 us, 1 processor)
+	total alloc = 21,192,206,592 bytes  (excludes profiling overheads)
+
+COST CENTRE                      MODULE  %time %alloc
+
+coalgebra.subs                   Main     65.1    2.1
+coalgebra.place.remainingTiles   Main     24.8   58.0
+coalgebra.subs.span              Main      4.6   23.6
+algebra.add                      Main      1.7    8.5
+coalgebra.unique                 Main      1.1    1.8
+algebra                          Main      0.7    2.6
+coalgebra.place.remainingSquares Main      0.6    1.6
+fmap                             Main      0.6    1.1
+
+
+                                                                                    individual     inherited
+COST CENTRE                               MODULE                  no.     entries  %time %alloc   %time %alloc
+
+MAIN                                      MAIN                     45           0    0.0    0.0   100.0  100.0
+ main                                     Main                     92           0    0.0    0.0     0.0    0.0
+ CAF                                      Main                     89           0    0.0    0.0   100.0  100.0
+  side                                    Main                    106           1    0.0    0.0     0.0    0.0
+  tiles                                   Main                    105           1    0.0    0.0     0.0    0.0
+  coalgebra                               Main                    101           0    0.0    0.0     0.0    0.0
+   coalgebra.unique                       Main                    102           1    0.0    0.0     0.0    0.0
+  n                                       Main                     97           1    0.0    0.0     0.0    0.0
+  squares                                 Main                     96           1    0.0    0.0     0.0    0.0
+   squares.\                              Main                     98           6    0.0    0.0     0.0    0.0
+  main                                    Main                     90           1    0.0    0.0   100.0  100.0
+   main.all                               Main                     93           1    0.0    0.0    99.7   99.9
+    hylo                                  Main                     94          21    0.0    0.0    99.7   99.9
+     algebra                              Main                    111           1    0.0    0.2     0.2    0.7
+      algebra.add                         Main                    113           6    0.1    0.5     0.1    0.5
+     fmap                                 Main                     99     1214975    0.6    1.1    99.6   99.2
+      algebra                             Main                    124     1214974    0.7    2.4     2.2   10.4
+       algebra.add                        Main                    126     1214968    1.5    7.9     1.5    7.9
+      coalgebra                           Main                    114     1214974    0.2    0.6    96.7   87.7
+       coalgebra.col                      Main                    123     1214974    0.1    0.0     0.1    0.0
+       coalgebra.tile                     Main                    122     1214974    0.1    0.0     0.1    0.0
+       coalgebra.(...)                    Main                    121     1214974    0.0    0.0     0.0    0.0
+       coalgebra.row                      Main                    120     1214974    0.0    0.0     0.0    0.0
+       coalgebra.unique                   Main                    117           0    1.1    1.8     1.1    1.8
+       coalgebra.subs                     Main                    116     1214974   65.1    2.1    95.2   85.3
+        coalgebra.place                   Main                    125     1214968    0.1    0.0    25.5   59.6
+         coalgebra.place.remainingTiles   Main                    128     1214968   24.8   58.0    24.8   58.0
+         coalgebra.place.remainingSquares Main                    127     1214968    0.6    1.6     0.6    1.6
+        coalgebra.subs.span               Main                    118     3827518    4.6   23.6     4.6   23.6
+     coalgebra                            Main                     95           1    0.0    0.0     0.0    0.0
+      coalgebra.col                       Main                    110           1    0.0    0.0     0.0    0.0
+      coalgebra.tile                      Main                    109           1    0.0    0.0     0.0    0.0
+      coalgebra.(...)                     Main                    108           1    0.0    0.0     0.0    0.0
+      coalgebra.row                       Main                    107           1    0.0    0.0     0.0    0.0
+      coalgebra.unique                    Main                    103           0    0.0    0.0     0.0    0.0
+      coalgebra.subs                      Main                    100           1    0.0    0.0     0.0    0.0
+       coalgebra.place                    Main                    112           6    0.0    0.0     0.0    0.0
+        coalgebra.place.remainingTiles    Main                    119           6    0.0    0.0     0.0    0.0
+        coalgebra.place.remainingSquares  Main                    115           6    0.0    0.0     0.0    0.0
+       coalgebra.subs.span                Main                    104           6    0.0    0.0     0.0    0.0
+   main.valid                             Main                     91           1    0.2    0.1     0.2    0.1
+ CAF                                      GHC.IO.Handle.FD         84           0    0.0    0.0     0.0    0.0
+ CAF                                      GHC.Conc.Signal          81           0    0.0    0.0     0.0    0.0
+ CAF                                      GHC.IO.Encoding          79           0    0.0    0.0     0.0    0.0
+ CAF                                      GHC.IO.Encoding.Iconv    64           0    0.0    0.0     0.0    0.0

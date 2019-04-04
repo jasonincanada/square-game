@@ -16,6 +16,17 @@
                  22-
                  ---
 
+   Revision:     I've added another parameter to the algebra accumulator to count the number
+                 of placed squares as the boards are being constructed.  The final number needs
+                 to be equal to the side length for us to have a complete Partridge Square.  So
+                 now we can generate all possible valid squares.  It works for n=1, and it
+                 runs through all possibilities for n=5, finding nothing of course, but it
+                 takes basically no time.
+
+                 At n=6 it starts noticeably slowing, needing 48 seconds to run through the
+                 the whole space.  I enabled profiling and exported a report, which shows the
+                 bottleneck at the subs and remainingTiles functions.
+
 -}
 
 {-# Language DeriveFunctor #-}
@@ -23,16 +34,19 @@
 
 module Main where
 
-import Data.Char (chr)
-import Data.List ((\\), delete, nub)
+import Data.Bifunctor (bimap)
+import Data.Char      (chr)
+import Data.List      ((\\), delete, nub)
 import qualified Data.Map.Strict as M
 
 main :: IO ()
 main = do
-  mapM_ (putStrLn . display) $ hylo coalgebra algebra (tiles, squares)
+  let all      = hylo coalgebra algebra (tiles, squares)
+  let complete = map fst $ filter ((==side) . snd) $ all
+  mapM_ (putStrLn . display) complete
 
--- Manually set n=2 for now and find the side length
-n    = 2
+-- Manually set n=6 for now and find the side length
+n    = 6
 side = n*(n+1) `div` 2
 
 -- Types
@@ -43,7 +57,7 @@ type Board  = M.Map Tile Square     -- A list of placed squares, keyed on the ro
 
 -- The collection of starting squares (not a set--we have many squares of the same size)
 squares :: [Square]
-squares = concat $ map (\i -> replicate i i) [1,2 .. n]
+squares = reverse $ concat $ map (\i -> replicate i i) [1,2 .. n]
 
 -- All grid positions on the board
 tiles :: [Tile]
@@ -88,12 +102,12 @@ coalgebra (tiles, squares) = NodeF subs
 
 type Algebra f a = f a -> a
 
-algebra :: Algebra TrieF [Board]
-algebra (NodeF []            ) = [M.empty]
+algebra :: Algebra TrieF [(Board,Int)]
+algebra (NodeF []            ) = [ (M.empty, 0) ]
 algebra (NodeF (placement:ps)) = add placement ++ concat (fmap add ps)
   where
-    add :: (Tile, Square, [Board]) -> [Board]
-    add (tile, square, boards) = fmap (M.insert tile square) boards
+    add :: (Tile, Square, [(Board,Int)]) -> [(Board,Int)]
+    add (tile, square, boards) = fmap (bimap (M.insert tile square) (+1)) boards
 
 hylo :: Functor f => Coalgebra f a -> Algebra f b -> a -> b
 hylo coalg alg = alg . (fmap $ hylo coalg alg) . coalg
