@@ -27,6 +27,16 @@
                  the whole space.  I enabled profiling and exported a report, which shows the
                  bottleneck at the subs and remainingTiles functions.
 
+   Revision:     For the first pass at optimization, I switched out lists of tiles for IntSets
+                 of them, since IntSet is more performant than Haskell's built-in lists.  This
+                 gets the run time for checking all of n=6 down to 25 seconds, from 48, not a
+                 very good improvement.  However, when I searched for the first solution to n=8,
+                 it returned a malformed board (n8-malformed.txt) due to an oversight in the
+                 logic of converting tile addresses, which now lets tiles wrap around to the
+                 next row of the board.  This looks funny but it gives me some intuition that
+                 there may be a better way to think about representing the objects here in a
+                 more abstract manner than with individual tiles/rows/columns.
+
 -}
 
 {-# Language DeriveFunctor #-}
@@ -38,21 +48,23 @@ import Data.Bifunctor (bimap)
 import Data.Char      (chr)
 import Data.List      ((\\), delete, nub)
 import qualified Data.Map.Strict as M
+import qualified Data.IntSet     as S
 
 main :: IO ()
 main = do
   let all      = hylo coalgebra algebra (tiles, squares)
   let complete = map fst $ filter ((==side) . snd) $ all
-  mapM_ (putStrLn . display) complete
+  mapM_ (putStrLn . display) [head $ complete]
 
 -- Manually set n=6 for now and find the side length
-n    = 6
+n    = 8
 side = n*(n+1) `div` 2
 
 -- Types
-type Tile   = (Int, Int)            -- Row/column of a 1x1 cell on the game board
+type Tile   = Int                   -- The integer address of a 1x1 cell on the game board
+type Tiles  = S.IntSet              -- Store tiles in a set for efficiency
 type Square = Int                   -- Represent a square by its side length
-type Board  = M.Map Tile Square     -- A list of placed squares, keyed on the row/col
+type Board  = M.Map Tile Square     -- A list of placed squares, keyed on the index
                                     -- of their upper left corner
 
 -- The collection of starting squares (not a set--we have many squares of the same size)
@@ -60,9 +72,17 @@ squares :: [Square]
 squares = reverse $ concat $ map (\i -> replicate i i) [1,2 .. n]
 
 -- All grid positions on the board
-tiles :: [Tile]
-tiles = [ (row, col) | row <- [0,1 .. side-1],
-                       col <- [0,1 .. side-1]]
+tiles :: Tiles
+tiles = S.fromList [ tileAt (row, col) | row <- [0,1 .. side-1],
+                                         col <- [0,1 .. side-1]]
+
+
+-- Convert to/from the index and row/column representations of a tile
+tileAt :: (Int, Int) -> Int
+tileAt (row, col) = row * side + col
+
+tileFrom :: Int -> (Int, Int)
+tileFrom tile = (tile `div` side, tile `mod` side)
 
 
 -- Our functor, primed for use in recursion schemes.  NodeF is a node in our trie representing
@@ -77,27 +97,28 @@ newtype Fix f = Fix { out :: f (Fix f) }
 type Coalgebra f a = a -> f a
 
 -- Branch a node into all possible sub-nodes
-coalgebra :: Coalgebra TrieF ([Tile], [Square])
+coalgebra :: Coalgebra TrieF (Tiles, [Square])
 coalgebra (tiles, [])      = NodeF []
 coalgebra (tiles, squares) = NodeF subs
   where
-    tile       = head tiles
-    (row, col) = tile
+    tile       = head $ S.toList tiles
+    (row, col) = tileFrom tile
 
     subs = [ place square tile span | square <- unique squares,
 
-                                      let span = [ (row+r, col+c) | r <- [0..square-1],
-                                                                    c <- [0..square-1]],
+                                      let span = [ tileAt (row+r, col+c) | r <- [0..square-1],
+                                                                           c <- [0..square-1]],
 
-                                      all (`elem` tiles) span ]
+                                      all (`S.member` tiles) span ]
 
-    place :: Square -> Tile -> [Tile] -> (Tile, Square, ([Tile], [Square]))
+    place :: Square -> Tile -> [Tile] -> (Tile, Square, (Tiles, [Square]))
     place square tile span = (tile, square, (remainingTiles, remainingSquares))
       where
-        remainingTiles   = tiles \\ span
+        remainingTiles   = tiles \\\ S.fromList span
         remainingSquares = delete square squares
 
     unique = Data.List.nub
+    (\\\)  = S.difference
 
 
 type Algebra f a = f a -> a
@@ -124,19 +145,20 @@ render board = merged
   where
     merged = M.union placed blanks
     placed = M.fromList $ concatMap expand (M.toList board)
-    blanks = M.fromList $ (,0) <$> tiles
+    blanks = M.fromList $ (,0) <$> S.toList tiles
 
     --     :: a -> f a (!)
     expand :: (Tile, Square) -> [(Tile, Square)]
-    expand ((row, col), square) = [ ((row+r, col+c), square) | r <- [0..square-1],
-                                                               c <- [0..square-1]]
+    expand (tile, square) = let (row, col) = tileFrom tile
+                            in  [ (tileAt (row+r, col+c), square) | r <- [0..square-1],
+                                                                    c <- [0..square-1]]
 
 -- Display a board in ASCII
 display :: Board -> String
 display board = unlines [[ letter (row, col) | col <- [0 .. side-1]]
                                              | row <- [0 .. side-1]]
     where
-      letter pos = let tile = tiled M.! pos
+      letter pos = let tile = tiled M.! (tileAt pos)
                    in  if tile == 0
                        then '-'
                        else chr (48 + tile)
