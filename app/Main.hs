@@ -46,7 +46,7 @@
                  This now checks all of n=6 in 3.7 seconds.  It needs ~10 min to run through n=7
                  though, so I'll need to think of further optimizations before running through
                  n=8.  However, it now finds its first complete, valid Partridge Square, in just
-                 under 5 minutes.  See n8-complete-1.txt
+                 under 5 minutes.  See n8-complete-1.txt and square-1.png
 
 -}
 
