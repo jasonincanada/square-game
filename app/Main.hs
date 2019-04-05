@@ -162,17 +162,17 @@ coalgebra2 (levels, squares) = NodeF subs
         levels'  = addLevels column square levels
         squares' = delete square squares
 
+    addLevels :: Column -> Square -> [Level] -> [Level]
+    addLevels column square (l:ls)
+      | column > 0 = l : addLevels (column-1) square ls
+      | otherwise  = replicate square (l+square) ++ drop (square-1) ls
+
     indexOf :: Eq a => a -> [a] -> Int
     indexOf x (l:ls)
       | x == l    = 0
       | otherwise = 1 + indexOf x ls
 
     unique = Data.List.nub
-
-addLevels :: Column -> Square -> [Level] -> [Level]
-addLevels column square (l:ls)
-  | column > 0 = l : addLevels (column-1) square ls
-  | otherwise  = replicate square (l+square) ++ drop (square-1) ls
 
 
 type Algebra f a = f a -> a
