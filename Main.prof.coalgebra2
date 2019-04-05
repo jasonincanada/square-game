@@ -1,0 +1,76 @@
+	Fri Apr  5 13:40 2019 Time and Allocation Profiling Report  (Final)
+
+	   Main +RTS -p -RTS
+
+	total time  =      608.26 secs   (608259 ticks @ 1000 us, 1 processor)
+	total alloc = 584,657,418,632 bytes  (excludes profiling overheads)
+
+COST CENTRE               MODULE  %time %alloc
+
+coalgebra2.row            Main     24.8    0.5
+algebra.add               Main     14.9   37.5
+addLevels                 Main     10.4   21.5
+coalgebra2.indexOf        Main      9.9    0.0
+coalgebra2.unique         Main      9.8    6.8
+algebra                   Main      5.9   11.2
+coalgebra2.place.squares' Main      5.3    7.4
+coalgebra2.distanceToWall Main      4.8    0.6
+coalgebra2.subs           Main      4.6    5.7
+fmap                      Main      3.9    3.5
+coalgebra2                Main      1.6    2.9
+coalgebra2.column         Main      1.4    0.3
+main.complete             Main      1.2    0.4
+coalgebra2.place          Main      1.1    1.8
+
+
+                                                                             individual     inherited
+COST CENTRE                        MODULE                  no.     entries  %time %alloc   %time %alloc
+
+MAIN                               MAIN                     46           0    0.0    0.0   100.0  100.0
+ main                              Main                     94           0    0.0    0.0     0.0    0.0
+ CAF                               Main                     91           0    0.0    0.0   100.0  100.0
+  side                             Main                    111           1    0.0    0.0     0.0    0.0
+  levels                           Main                    110           1    0.0    0.0     0.0    0.0
+  coalgebra2                       Main                    104           0    0.0    0.0     0.0    0.0
+   coalgebra2.unique               Main                    105           1    0.0    0.0     0.0    0.0
+  n                                Main                    100           1    0.0    0.0     0.0    0.0
+  squares                          Main                     99           1    0.0    0.0     0.0    0.0
+   squares.\                       Main                    101           7    0.0    0.0     0.0    0.0
+  main                             Main                     92           1    0.1    0.0   100.0  100.0
+   main.seed                       Main                     97           1    0.0    0.0     0.0    0.0
+   main.all                        Main                     95           1    0.0    0.0    98.7   99.6
+    hylo                           Main                     96          28    0.0    0.0    98.7   99.6
+     algebra                       Main                    113           1    0.3    0.5     1.2    2.4
+      algebra.add                  Main                    115           7    0.9    1.8     0.9    1.8
+     fmap                          Main                    102   110483315    3.9    3.5    97.5   97.3
+      algebra                      Main                    127   110483314    5.7   10.7    19.7   46.3
+       algebra.add                 Main                    129   110483307   14.0   35.6    14.0   35.6
+      coalgebra2                   Main                    117   110483314    1.6    2.9    74.0   47.4
+       coalgebra2.row              Main                    123   110483314   24.8    0.5    24.8    0.5
+       coalgebra2.column           Main                    122   110483314    1.4    0.3    11.3    0.3
+        coalgebra2.indexOf         Main                    126  1775297787    9.9    0.0     9.9    0.0
+       coalgebra2.distanceToWall   Main                    121   110483314    4.8    0.6     4.8    0.6
+       coalgebra2.unique           Main                    120           0    9.8    6.8     9.8    6.8
+       coalgebra2.subs             Main                    119   110483314    4.6    5.7    21.7   36.4
+        coalgebra2.place           Main                    128   110483307    1.1    1.8    17.1   30.8
+         coalgebra2.place.levels'  Main                    132   110483307    0.4    0.0    10.7   21.5
+          addLevels                Main                    133  1599519337   10.4   21.5    10.4   21.5
+         coalgebra2.place.squares' Main                    131   110483307    5.3    7.4     5.3    7.4
+         coalgebra2.place.seed     Main                    130   110483307    0.0    0.0     0.0    0.0
+     coalgebra2                    Main                     98           1    0.0    0.0     0.0    0.0
+      coalgebra2.row               Main                    109           1    0.0    0.0     0.0    0.0
+      coalgebra2.column            Main                    108           1    0.0    0.0     0.0    0.0
+       coalgebra2.indexOf          Main                    112           1    0.0    0.0     0.0    0.0
+      coalgebra2.distanceToWall    Main                    107           1    0.0    0.0     0.0    0.0
+      coalgebra2.unique            Main                    106           0    0.0    0.0     0.0    0.0
+      coalgebra2.subs              Main                    103           1    0.0    0.0     0.0    0.0
+       coalgebra2.place            Main                    114           7    0.0    0.0     0.0    0.0
+        coalgebra2.place.levels'   Main                    124           7    0.0    0.0     0.0    0.0
+         addLevels                 Main                    125           7    0.0    0.0     0.0    0.0
+        coalgebra2.place.squares'  Main                    118           7    0.0    0.0     0.0    0.0
+        coalgebra2.place.seed      Main                    116           7    0.0    0.0     0.0    0.0
+   main.complete                   Main                     93           1    1.2    0.4     1.2    0.4
+ CAF                               GHC.IO.Handle.FD         85           0    0.0    0.0     0.0    0.0
+ CAF                               GHC.Conc.Signal          82           0    0.0    0.0     0.0    0.0
+ CAF                               GHC.IO.Encoding          79           0    0.0    0.0     0.0    0.0
+ CAF                               GHC.IO.Encoding.Iconv    65           0    0.0    0.0     0.0    0.0

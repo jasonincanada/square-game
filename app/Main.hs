@@ -37,6 +37,17 @@
                  there may be a better way to think about representing the objects here in a
                  more abstract manner than with individual tiles/rows/columns.
 
+
+   Checkpoint 3: I've written a new coalgebra that does away with individual tiles and considers
+                 the square in terms of columns being placed up to a certain row.  When placing
+                 a sub-square, the affected column levels are increased with a simple sum,
+                 instead of removing the individual tiles that span the sub-square.  This
+                 removes the set difference operation that was bogging down the first coalgebra.
+                 This now checks all of n=6 in 3.7 seconds.  It needs ~10 min to run through n=7
+                 though, so I'll need to think of further optimizations before running through
+                 n=8.  However, it now finds its first complete, valid Partridge Square, in just
+                 under 5 minutes.  See n8-complete-1.txt
+
 -}
 
 {-# Language DeriveFunctor #-}
@@ -52,8 +63,10 @@ import qualified Data.IntSet     as S
 
 main :: IO ()
 main = do
-  let all      = hylo coalgebra algebra (tiles, squares)
+  --let all    = hylo coalgebra  algebra (tiles, squares)
+  let all      = hylo coalgebra2 algebra (levels, squares)
   let complete = map fst $ filter ((==side) . snd) $ all
+  let complete'= map fst $ filter (const True    ) $ all
   mapM_ (putStrLn . display) [head $ complete]
 
 -- Manually set n=6 for now and find the side length
@@ -119,6 +132,47 @@ coalgebra (tiles, squares) = NodeF subs
 
     unique = Data.List.nub
     (\\\)  = S.difference
+
+
+type Column = Int
+type Level  = Int
+type Seed   = ([Level], [Square])
+
+levels :: [Level]
+levels = replicate side 0 ++ [side]
+
+coalgebra2 :: Coalgebra TrieF Seed
+coalgebra2 (_, [])           = NodeF []
+coalgebra2 (levels, squares) = NodeF subs
+  where
+    row    = minimum levels
+    column = indexOf row levels
+    space  = length $ takeWhile (==row) (drop column levels)
+
+    subs = [ place square | square <- unique squares,
+                            square <= space,          -- Fits horizontally
+                            square <= side - row      -- Fits vertically
+                            ]
+
+    place :: Square -> (Tile, Square, Seed)
+    place square = (tile, square, seed)
+      where
+        tile     = tileAt (row, column)
+        seed     = (levels', squares')
+        levels'  = addLevels column square levels
+        squares' = delete square squares
+
+    indexOf :: Eq a => a -> [a] -> Int
+    indexOf x (l:ls)
+      | x == l    = 0
+      | otherwise = 1 + indexOf x ls
+
+    unique = Data.List.nub
+
+addLevels :: Column -> Square -> [Level] -> [Level]
+addLevels column square (l:ls)
+  | column > 0 = l : addLevels (column-1) square ls
+  | otherwise  = replicate square (l+square) ++ drop (square-1) ls
 
 
 type Algebra f a = f a -> a
