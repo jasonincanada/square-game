@@ -22,7 +22,7 @@ The roadmap is still new and will evolve over time:
   - [x] Generate them from scratch using C# and an iterative algo
 
 - [ ] Game logic
-  - [ ] Auto-deduction of whole square from two revealed corners and the connecting edge
+  - [ ] Auto-deduction of whole tile (sub-square) from two revealed corners and the connecting edge
     - [ ] Unit tests for a couple examples
 
 - [ ] Server-side (in Haskell of course!)
