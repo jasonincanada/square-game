@@ -14,18 +14,45 @@ This is probably the most basic, canonical rule-set you can have for this puzzle
 The roadmap is still new and will evolve over time:
 
 - [x] Buy `squaregame.io`
+
 - [x] Generate the square data, some options:
   - [ ] Parse [Munklar's](https://github.com/Munklar/Partridge-Puzzle) solution outputs
   - [ ] Upgrade my dlx solver to Algorithm M from Knuth's Art of Computer Programming and generate them as an exact cover problem
   - [ ] Generate them from scratch using a hylomorphism. This is underway at [app/Main.hs](./app/Main.hs)
   - [x] Generate them from scratch using C# and an iterative algo
 
+- [ ] Game logic
+  - [ ] Auto-deduction of whole square from two revealed corners and the connecting edge
+    - [ ] Unit tests for a couple examples
+
 - [ ] Server-side (in Haskell of course!)
   - [ ] Database design
   - [ ] Learn [Scotty](http://hackage.haskell.org/package/scotty-0.11.3/docs/Web-Scotty.html)
   - [ ] API interface for clients
+    - [ ] Log in
+    - [ ] Start puzzle
+    - [ ] Edge clicked
+    - [ ] Request scores/stats
+
+- [ ] Use cases
+  - [ ] User registers on site
+    - [ ] Twitter auth
+    - [ ] Google auth
+    - [ ] Facebook auth
+    - [ ] Github auth
+  - [ ] Player starts new puzzle
+    - [ ] At random
+    - [ ] That at least one person has already solved (non-blank leaderboard)
+  - [ ] Player clicks through puzzle (main gameplay)
+  - [ ] Player submits solution attempt
+  - [ ] Player browses their past puzzle results/scores
 
 - [ ] Client-side (JavaScript in the browser, preferably via [PureScript](http://www.purescript.org/))
+  - [ ] Partridge puzzle React component for rendering in-progress puzzle
+    - [ ] Hovering over an edge shows a visual cue selecting that edge for clicking
+    - [ ] Render "click-path" through puzzle
+  - [ ] Display remaining tiles (the placeable sub-squares)
+  - [ ] Player drags a tile onto the board
 
 
 ## Concept Art
