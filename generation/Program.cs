@@ -27,7 +27,7 @@ namespace jrh.PartridgeSquares.Generation
     }
 
     // The main board to tile with sub-squares. This is a highly mutable structure with fixed array
-    // sizes and a variable-sized stack holding the list of currently placed squares
+    // sizes for the column levels and a variable-sized stack for the list of currently placed squares
     public class Board
     {
         public static int N { get; private set; }
@@ -46,7 +46,7 @@ namespace jrh.PartridgeSquares.Generation
         private int[] levels = new int[3 * (3 + 1) / 2 + 1];
 #endif        
 
-        // Side+1 because squares is 1-based for simplicity
+        // n+1 because squares is 1-based for simplicity
 #if N8
         private int[] squares = new int[8 + 1];
 #elif N7
