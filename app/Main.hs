@@ -48,6 +48,29 @@
                  n=8.  However, it now finds its first complete, valid Partridge Square, in just
                  under 5 minutes.  See n8-complete-1.txt and square-1.png
 
+   Revision:     I wrote a third coalgebra that recurses differently over the levels, trying to
+                 avoid list concatenations, but instead of working faster it's actually slower
+                 than the other coalgebras.  So for now I've fallen back on the old trusty C#
+                 for an iterative solution.  It performs acceptably fast, checking all of n=7
+                 in 1m 20s, and running through all of n=8 in just over 14 hours, generating
+                 all of the expected 18,656 squares.
+
+   Remarks:      I didn't try using any sort of symmetry tricks to reduce the search space in
+                 any of these attempts.  This refers not only to rotating and flipping the whole
+                 square, but sub-square patterns as well; for example, any time there is a pair
+                 of threes beside a six, we immediately know there is another square with a six
+                 beside the threes instead.  As well, any two distinct equally-sized sub-squares
+                 (themselves consisting of smaller squares) can be swapped, wherever they are in
+                 the larger square.  This should generalize to swapping any two similarly-shaped
+                 regions.  There is no doubt a great group theory exercise here!
+
+                 A delightful thing about these recursion scheme attempts is that they run in
+                 constant memory, no matter how big the space is.  Even though the search tree
+                 is huge, since Haskell is a lazy language, under the hood it only allocates
+                 enough space as is required for the immediate needs of the algo, which at its
+                 greatest extent uses a stack size of only n*(n+1)/2 (the starting number of
+                 squares).
+
 -}
 
 {-# Language DeriveFunctor #-}
@@ -56,6 +79,7 @@
 module Main where
 
 import Data.Bifunctor (bimap)
+import Data.Bool      (bool)
 import Data.Char      (chr)
 import Data.List      ((\\), delete, nub)
 import qualified Data.Map.Strict as M
@@ -64,10 +88,11 @@ import qualified Data.IntSet     as S
 main :: IO ()
 main = do
   --let all    = hylo coalgebra  algebra (tiles, squares)
-  let all      = hylo coalgebra2 algebra (levels, squares)
+  --let all    = hylo coalgebra2 algebra (levels, squares)
+  let all      = hylo coalgebra3 algebra (0, 0, replicate side 0, squares)
   let complete = map fst $ filter ((==side) . snd) $ all
   let complete'= map fst $ filter (const True    ) $ all
-  mapM_ (putStrLn . display) [head $ complete]
+  mapM_ (putStrLn . display) (take 2 complete)
 
 -- Manually set n=6 for now and find the side length
 n    = 8
@@ -77,7 +102,7 @@ side = n*(n+1) `div` 2
 type Tile   = Int                   -- The integer address of a 1x1 cell on the game board
 type Tiles  = S.IntSet              -- Store tiles in a set for efficiency
 type Square = Int                   -- Represent a square by its side length
-type Board  = M.Map Tile Square     -- A list of placed squares, keyed on the index
+type Board  = [(Tile,Square)]       -- A list of placed squares, keyed on the index
                                     -- of their upper left corner
 
 -- The collection of starting squares (not a set--we have many squares of the same size)
@@ -134,6 +159,7 @@ coalgebra (tiles, squares) = NodeF subs
     (\\\)  = S.difference
 
 
+type Row    = Int
 type Column = Int
 type Level  = Int
 type Seed   = ([Level], [Square])
@@ -175,14 +201,49 @@ coalgebra2 (levels, squares) = NodeF subs
     unique = Data.List.nub
 
 
+type Seed2 = (Row, Column, [Level], [Square])
+type Accum = (Int, [Level], Row, Column)
+
+coalgebra3 :: Coalgebra TrieF Seed2
+coalgebra3 (_, _, _, [])                  = NodeF []
+coalgebra3 (row, column, levels, squares) = NodeF subs
+  where
+    subs  = [ place square | square <- unique squares,
+                             square <= space,          -- Fits horizontally
+                             square <= side - row ]    -- Fits vertically
+
+    space = length $ takeWhile (==row) (drop column levels)
+
+    place :: Square -> (Tile, Square, Seed2)
+    place square = (tile, square, seed)
+      where
+        tile          = tileAt (row, column)
+        seed          = (r, c, reverse ls, squares')
+        (_, ls, r, c) = updatelevels
+        squares'      = delete square squares
+
+        updatelevels :: Accum
+        updatelevels = foldl go (0, [], side, 0) levels
+          where
+            go :: Accum -> Level -> Accum
+            go (i, ls, r, c) level = (i+1, level':ls, row', column')
+              where
+                inSquare = column <= i && i < column + square
+                level'   = bool level  (level+square)  inSquare
+                row'     = bool r       level'        (level' < r)
+                column'  = bool c       i             (level' < r)
+
+    unique = Data.List.nub
+
+
 type Algebra f a = f a -> a
 
 algebra :: Algebra TrieF [(Board,Int)]
-algebra (NodeF []            ) = [ (M.empty, 0) ]
+algebra (NodeF []            ) = [ ([], 0) ]
 algebra (NodeF (placement:ps)) = add placement ++ concat (fmap add ps)
   where
     add :: (Tile, Square, [(Board,Int)]) -> [(Board,Int)]
-    add (tile, square, boards) = fmap (bimap (M.insert tile square) (+1)) boards
+    add (tile, square, boards) = bimap ( (tile,square): ) (+1) <$> boards
 
 hylo :: Functor f => Coalgebra f a -> Algebra f b -> a -> b
 hylo coalg alg = alg . (fmap $ hylo coalg alg) . coalg
@@ -198,7 +259,7 @@ render :: Board -> M.Map Tile Square
 render board = merged
   where
     merged = M.union placed blanks
-    placed = M.fromList $ concatMap expand (M.toList board)
+    placed = M.fromList $ concatMap expand board
     blanks = M.fromList $ (,0) <$> S.toList tiles
 
     --     :: a -> f a (!)
