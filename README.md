@@ -14,10 +14,11 @@ This is probably the most basic, canonical rule-set you can have for this puzzle
 The roadmap is still new and will evolve over time:
 
 - [x] Buy `squaregame.io`
-- [ ] Generate the square data, some options:
+- [x] Generate the square data, some options:
   - [ ] Parse [Munklar's](https://github.com/Munklar/Partridge-Puzzle) solution outputs
   - [ ] Upgrade my dlx solver to Algorithm M from Knuth's Art of Computer Programming and generate them as an exact cover problem
   - [ ] Generate them from scratch using a hylomorphism. This is underway at [app/Main.hs](./app/Main.hs)
+  - [x] Generate them from scratch using C# and an iterative algo
 
 - [ ] Server-side (in Haskell of course!)
   - [ ] Database design
