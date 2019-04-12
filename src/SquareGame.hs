@@ -1,4 +1,5 @@
-{-# Language LambdaCase #-}
+{-# Language LambdaCase      #-}
+{-# Language RecordWildCards #-}
 
 module SquareGame where
 
@@ -16,7 +17,7 @@ data Board   = Board { -- Map a square to its shrouded and unshrouded grid cells
                        -- Map from grid cell to the square it belongs to and the cell's border type
                      , grid :: M.Map Cell (Square, CellBorder)
 
-                     } deriving (Show)
+                     } deriving (Eq, Show)
 
 type Square = (Row, Col, Size)
 type Row    = Int
@@ -127,7 +128,7 @@ contigs next (a:as) = (a, count) : contigs next rest
     count = length $ takeWhile (uncurry (==))
                    $ zip (a:as) ray
     ray   = iterate next a
-    rest  = (drop (count-1) as)
+    rest  = drop (count-1) as
 
 
 -- Map a position and length returned from contigs to all the positions we can deshroud
@@ -138,4 +139,17 @@ expand ((row, col), n) = \case
   SLeft   -> [ (row+r, col+c) | r <- [0..n-1], c <- [0..n-1]]
   SRight  -> [ (row+r, col-c) | r <- [0..n-1], c <- [0..n-1]]
 
+
+-- Initialize a fully shrouded board from a list of Squares
+board :: [Square] -> Board
+board = foldl add (Board M.empty M.empty)
+  where
+    add :: Board -> Square -> Board
+    add Board{..} square = Board squares' grid'
+      where
+        squares'  = M.insert square (S.fromList positions, S.empty) squares
+        grid'     = M.union (M.fromList cellmap) grid
+        cellmap   = map (\(pos, border) -> (pos, (square, border))) cs
+        cs        = cells square
+        positions = map fst cs
 
