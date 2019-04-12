@@ -1,5 +1,6 @@
 {-# Language LambdaCase      #-}
 {-# Language RecordWildCards #-}
+{-# Language TupleSections   #-}
 
 module SquareGame where
 
@@ -149,7 +150,7 @@ board = foldl add (Board M.empty M.empty)
       where
         squares'  = M.insert square (S.fromList positions, S.empty) squares
         grid'     = M.union (M.fromList cellmap) grid
-        cellmap   = map (\(pos, border) -> (pos, (square, border))) cs
+        cellmap   = fmap (square,) <$> cs
         cs        = cells square
         positions = map fst cs
 
