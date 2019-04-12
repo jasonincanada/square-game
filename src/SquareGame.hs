@@ -4,7 +4,9 @@
 
 module SquareGame where
 
+import Control.Arrow  ((>>>))
 import Data.Bifunctor (bimap)
+import NanoParsec
 import qualified Data.Map as M
 import qualified Data.Set as S
 
@@ -193,4 +195,23 @@ deshroud square Board{..} = Board squares' grid
 
     f :: (S.Set Cell, S.Set Cell) -> (S.Set Cell, S.Set Cell)
     f (shrouded, deshrouded) = (S.empty, S.union shrouded deshrouded)
+
+
+{--- IO operations ---}
+
+-- Construct a Board from a squares/*.sql file
+fromFile :: FilePath -> IO Board
+fromFile file = readFile file >>= process
+  where
+    process = lines >>> take 36
+                    >>> map (run parseSquare)
+                    >>> board
+                    >>> return
+
+parseSquare :: Parser Square
+parseSquare = do
+  size   <- number <* space
+  row    <- number <* char ','
+  column <- number
+  return (row, column, size)
 
