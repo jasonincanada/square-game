@@ -136,3 +136,22 @@ main = hspec $ do
     it "maps to the right number of cells" $
       M.size cells `shouldBe` 4*(4*4 + 2*2 + 2*2)
 
+
+  describe "borderShroud" $ do
+    let top2rows    = S.fromList [(0, 0),(0, 1),(0, 2), (1, 1)]
+    let bottom2rows = S.fromList [(71,0),(71,1),(71,2), (70,1)]
+    let left2cols   = S.fromList [(0, 0),(1, 0),(2, 0), (1, 1)]
+    let right2cols  = S.fromList [(0,71),(1,71),(2,71), (1,70)]
+
+    it "deshrouds the top" $
+      borderShroud top2rows    `shouldBe` [(0,0),(0,2)]
+
+    it "deshrouds the bottom" $
+      borderShroud bottom2rows `shouldBe` [(71,0),(71,2)]
+
+    it "deshrouds the left" $
+      borderShroud left2cols   `shouldBe` [(0,0),(2,0)]
+
+    it "deshrouds the right" $
+      borderShroud right2cols  `shouldBe` [(0,71),(2,71)]
+

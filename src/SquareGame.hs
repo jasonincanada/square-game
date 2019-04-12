@@ -146,6 +146,31 @@ expand ((row, col), n) = \case
   SRight  -> [ (row+r, col-c) | r <- [0..n-1], c <- [1..n-1]]
 
 
+-- Shrouds of width 1 along the board's border can be deshrouded
+borderShroud :: S.Set Cell -> [Pos]
+borderShroud shrouded = top ++ bottom ++ left ++ right
+  where
+    -- Hardcoded dimensions of an n=8 Partridge Square
+    side   = 36*2
+    last   = side-1
+
+    top    = [ (0, col)     | col <- [0..last],
+                              (0, col) `S.member`    shrouded,
+                              (1, col) `S.notMember` shrouded ]
+
+    bottom = [ (last, col)  | col <- [0..last],
+                              (last,   col) `S.member`    shrouded,
+                              (last-1, col) `S.notMember` shrouded ]
+
+    left   = [ (row, 0)     | row <- [0..last],
+                              (row, 0) `S.member`    shrouded,
+                              (row, 1) `S.notMember` shrouded ]
+
+    right  = [ (row, last)  | row <- [0..last],
+                              (row, last)   `S.member`    shrouded,
+                              (row, last-1) `S.notMember` shrouded ]
+
+
 -- Initialize a fully shrouded board from a list of Squares
 board :: [Square] -> Board
 board = foldl add (Board M.empty M.empty)
