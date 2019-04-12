@@ -17,7 +17,7 @@ data Board   = Board { -- Map a square to its shrouded and unshrouded grid cells
                        -- Map from grid cell to the square it belongs to and the cell's border type
                      , grid :: M.Map Cell (Square, CellBorder)
 
-                     } deriving (Eq, Show)
+                     } deriving (Show)
 
 type Square = (Row, Col, Size)
 type Row    = Int
