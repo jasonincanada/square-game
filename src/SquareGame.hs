@@ -184,3 +184,13 @@ board = foldl add (Board M.empty M.empty)
         cs        = cells square
         positions = map fst cs
 
+
+-- Deshroud all the tiles in a square
+deshroud :: Square -> Board -> Board
+deshroud square Board{..} = Board squares' grid
+  where
+    squares' = M.adjust f square squares
+
+    f :: (S.Set Cell, S.Set Cell) -> (S.Set Cell, S.Set Cell)
+    f (shrouded, deshrouded) = (S.empty, S.union shrouded deshrouded)
+

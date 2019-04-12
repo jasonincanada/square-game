@@ -155,3 +155,17 @@ main = hspec $ do
     it "deshrouds the right" $
       borderShroud right2cols  `shouldBe` [(0,71),(2,71)]
 
+
+  describe "deshroud" $ do
+    let Board squares _ = deshroud (0,4,2) $ board testSquares
+
+    it "deshrouds a square" $
+      squares M.! (0,4,2) `shouldBe` ( -- Nothing left in the set of shrouded cells
+                                       S.empty,
+
+                                       -- They've all been moved to the unshrouded set
+                                       S.fromList [(0,8),(0,9),(0,10),(0,11),
+                                                   (1,8),(1,9),(1,10),(1,11),
+                                                   (2,8),(2,9),(2,10),(2,11),
+                                                   (3,8),(3,9),(3,10),(3,11)])
+
