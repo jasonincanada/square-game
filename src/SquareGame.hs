@@ -199,7 +199,7 @@ deshroud square Board{..} = Board squares' grid
 
 {--- IO operations ---}
 
--- Construct a Board from a squares/*.sql file
+-- Construct a Board from a squares/*.sqr file
 fromFile :: FilePath -> IO Board
 fromFile file = readFile file >>= process
   where
