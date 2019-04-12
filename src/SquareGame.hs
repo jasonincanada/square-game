@@ -140,10 +140,10 @@ contigs next (pos:ps) = (pos, count) : contigs next rest
 -- this segment of the border
 expand :: (Pos, Int) -> SquareSide -> [Pos]
 expand ((row, col), n) = \case
-  STop    -> [ (row+r, col+c) | r <- [0..n-1], c <- [0..n-1]]
-  SBottom -> [ (row-r, col+c) | r <- [0..n-1], c <- [0..n-1]]
-  SLeft   -> [ (row+r, col+c) | r <- [0..n-1], c <- [0..n-1]]
-  SRight  -> [ (row+r, col-c) | r <- [0..n-1], c <- [0..n-1]]
+  STop    -> [ (row+r, col+c) | r <- [1..n-1], c <- [0..n-1]]
+  SBottom -> [ (row-r, col+c) | r <- [1..n-1], c <- [0..n-1]]
+  SLeft   -> [ (row+r, col+c) | r <- [0..n-1], c <- [1..n-1]]
+  SRight  -> [ (row+r, col-c) | r <- [0..n-1], c <- [1..n-1]]
 
 
 -- Initialize a fully shrouded board from a list of Squares

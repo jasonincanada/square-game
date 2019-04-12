@@ -98,21 +98,21 @@ main = hspec $ do
 
   describe "expand" $ do
     it "top side 3-cell deshroud" $
-      expand ((0,0), 3) STop    `shouldBe` [ (0,0), (0,1), (0,2),
-                                             (1,0), (1,1), (1,2),
+      expand ((0,0), 3) STop    `shouldBe` [ (1,0), (1,1), (1,2),
                                              (2,0), (2,1), (2,2) ]
+
     it "bottom side 3-cell deshroud" $
-      expand ((2,0), 3) SBottom `shouldBe` [ (2,0), (2,1), (2,2),
-                                             (1,0), (1,1), (1,2),
+      expand ((2,0), 3) SBottom `shouldBe` [ (1,0), (1,1), (1,2),
                                              (0,0), (0,1), (0,2) ]
+
     it "left side 3-cell deshroud" $
-      expand ((0,0), 3) SLeft   `shouldBe` [ (0,0), (0,1), (0,2),
-                                             (1,0), (1,1), (1,2),
-                                             (2,0), (2,1), (2,2) ]
+      expand ((0,0), 3) SLeft   `shouldBe` [ (0,1), (0,2),
+                                             (1,1), (1,2),
+                                             (2,1), (2,2) ]
     it "right side 3-cell deshroud" $
-      expand ((0,2), 3) SRight  `shouldBe` [ (0,2), (0,1), (0,0),
-                                             (1,2), (1,1), (1,0),
-                                             (2,2), (2,1), (2,0) ]
+      expand ((0,2), 3) SRight  `shouldBe` [ (0,1), (0,0),
+                                             (1,1), (1,0),
+                                             (2,1), (2,0) ]
 
 
   describe "board" $ do
