@@ -126,13 +126,13 @@ type NextPos = Pos -> Pos
 -- and drop traverse the position list, so there should be another way to do this that traverses
 -- the list only once
 contigs :: NextPos -> [Pos] -> [(Pos, Int)]
-contigs _    []     = []
-contigs next (a:as) = (a, count) : contigs next rest
+contigs _    []       = []
+contigs next (pos:ps) = (pos, count) : contigs next rest
   where
     count = length $ takeWhile (uncurry (==))
-                   $ zip (a:as) ray
-    ray   = iterate next a
-    rest  = drop (count-1) as
+                   $ zip (pos:ps) ray
+    ray   = iterate next pos
+    rest  = drop (count-1) ps
 
 
 -- A contiguous run of unshrouded cells along a border implies the square we're traversing is at
