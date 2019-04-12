@@ -215,3 +215,27 @@ parseSquare = do
   column <- number
   return (row, column, size)
 
+
+-- Print an ASCII graphic of the first few lines of this board to the screen
+toScreen :: Board -> IO ()
+toScreen board = mapM_ printrow [0..20]
+  where
+    printrow :: Int -> IO ()
+    printrow r = mapM_ (printcol r) [0..36*2-1]
+                   >> putStrLn ""
+
+    printcol :: Int -> Int -> IO ()
+    printcol r c
+      | isShrouded (r, c) board = putStr "?"
+      | otherwise               = putStr (show $ squareAt (r, c) board)
+
+isShrouded :: Cell -> Board -> Bool
+isShrouded cell (Board squares grid) = cell `S.member` shroud
+  where
+    shroud = fst (squares M.! square)
+    square = fst (grid M.! cell)
+
+squareAt :: Cell -> Board -> Int
+squareAt cell (Board _ grid) = thd $ fst $ grid M.! cell
+  where thd (_, _, x) = x
+
