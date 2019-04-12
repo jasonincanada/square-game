@@ -120,8 +120,11 @@ next SRight  = bimap (+1) id
 
 type NextPos = Pos -> Pos
 
--- Group coordinates into the position and length of their contiguous chunks.
--- This function assumes the list is already ordered
+-- Group coordinates into the position and length of their contiguous chunks.  This function
+-- assumes the list is already sorted, which is a safe assumption because keys in M.Map and
+-- values in S.Set are always sorted.  There is a bit of redundacy here because both takeWhile
+-- and drop traverse the position list, so there should be another way to do this that traverses
+-- the list only once
 contigs :: NextPos -> [Pos] -> [(Pos, Int)]
 contigs _    []     = []
 contigs next (a:as) = (a, count) : contigs next rest
@@ -132,7 +135,9 @@ contigs next (a:as) = (a, count) : contigs next rest
     rest  = drop (count-1) as
 
 
--- Map a position and length returned from contigs to all the positions we can deshroud
+-- A contiguous run of unshrouded cells along a border implies the square we're traversing is at
+-- least this size in the orthogonal direction, so list the coordinates that form a square from
+-- this segment of the border
 expand :: (Pos, Int) -> SquareSide -> [Pos]
 expand ((row, col), n) = \case
   STop    -> [ (row+r, col+c) | r <- [0..n-1], c <- [0..n-1]]
