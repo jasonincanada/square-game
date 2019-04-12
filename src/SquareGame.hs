@@ -122,7 +122,7 @@ type NextPos = Pos -> Pos
 
 -- Group coordinates into the position and length of their contiguous chunks.  This function
 -- assumes the list is already sorted, which is a safe assumption because keys in M.Map and
--- values in S.Set are always sorted.  There is a bit of redundacy here because both takeWhile
+-- values in S.Set are always sorted.  There is a bit of redundancy here because both takeWhile
 -- and drop traverse the position list, so there should be another way to do this that traverses
 -- the list only once
 contigs :: NextPos -> [Pos] -> [(Pos, Int)]
