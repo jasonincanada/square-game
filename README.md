@@ -48,6 +48,13 @@ The roadmap is still new and will evolve over time:
   - [ ] Player browses their past puzzle results/scores
 
 - [ ] Client-side (JavaScript in the browser, preferably via [PureScript](http://www.purescript.org/))
+  - [ ] Local client phase
+    - [ ] Render current puzzle board in a desktop window using [gloss](http://hackage.haskell.org/package/gloss)
+    - [ ] Render hot-zones for edge clicking during mouseover
+    - [ ] Take click input and modify board via (coupled) API call
+    - [ ] Local filesystem DB for this phase to hold state between requests?
+    - [ ] Migrate filesystem DB to [sqlite](https://www.sqlite.org/index.html)
+    - [ ] Decouple into separate server/client components
   - [ ] Partridge puzzle React component for rendering in-progress puzzle
     - [ ] Hovering over an edge shows a visual cue selecting that edge for clicking
     - [ ] Render "click-path" through puzzle
