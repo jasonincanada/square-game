@@ -196,6 +196,24 @@ deshroud square Board{..} = Board squares' grid
     f :: (S.Set Cell, S.Set Cell) -> (S.Set Cell, S.Set Cell)
     f (shrouded, deshrouded) = (S.empty, S.union shrouded deshrouded)
 
+deshroudCells :: Board -> [Cell] -> Board
+deshroudCells = foldr f
+  where
+    f :: Cell -> Board -> Board
+    f cell (Board squares grid) = let square = fst $ grid M.! cell
+                                      squares' = M.adjust (deshroudCell cell) square squares
+                                  in  Board squares' grid
+
+    deshroudCell :: Cell -> (S.Set Cell, S.Set Cell) -> (S.Set Cell, S.Set Cell)
+    deshroudCell cell (shrouded, unshrouded) = (S.delete cell shrouded, S.insert cell unshrouded)
+
+
+-- Filter to fully unshrouded squares
+fullSquares :: M.Map Square (S.Set Cell, S.Set Cell) -> [Square]
+fullSquares = M.filter ((==S.empty) . fst)
+              >>> M.keys
+
+
 
 {--- IO operations ---}
 
