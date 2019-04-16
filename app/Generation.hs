@@ -85,8 +85,8 @@ import Data.List      ((\\), delete, nub)
 import qualified Data.Map.Strict as M
 import qualified Data.IntSet     as S
 
-main :: IO ()
-main = do
+generation :: IO ()
+generation = do
   --let all    = hylo coalgebra  algebra (tiles, squares)
   --let all    = hylo coalgebra2 algebra (levels, squares)
   let all      = hylo coalgebra3 algebra (0, 0, replicate side 0, squares)
