@@ -49,7 +49,7 @@ The roadmap is still new and will evolve over time:
 
 - [ ] Client-side (JavaScript in the browser, preferably via [PureScript](http://www.purescript.org/))
   - [ ] Local client phase
-    - [ ] Render current puzzle board in a desktop window using [gloss](http://hackage.haskell.org/package/gloss)
+    - [x] Render current puzzle board in a desktop window using [gloss](http://hackage.haskell.org/package/gloss)
     - [ ] Render hot-zones for edge clicking during mouseover
     - [ ] Take click input and modify board via (coupled) API call
     - [ ] Local filesystem DB for this phase to hold state between requests?
