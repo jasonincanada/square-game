@@ -24,6 +24,7 @@ dependencies:
 - containers
 - hspec
 - gloss
+- lens
 
 library:
   source-dirs: src

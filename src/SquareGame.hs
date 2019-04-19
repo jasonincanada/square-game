@@ -1,10 +1,12 @@
 {-# Language LambdaCase      #-}
 {-# Language RecordWildCards #-}
+{-# Language TemplateHaskell #-}
 {-# Language TupleSections   #-}
 
 module SquareGame where
 
 import Control.Arrow  ((>>>))
+import Control.Lens
 import Data.Bifunctor (bimap)
 import NanoParsec
 import qualified Data.Map as M
@@ -12,15 +14,6 @@ import qualified Data.Set as S
 
 
 {--- Types ---}
-
-
-data Board   = Board { -- Map a square to its shrouded and unshrouded grid cells
-                       squares :: M.Map Square (S.Set Cell, S.Set Cell)
-
-                       -- Map from grid cell to the square it belongs to and the cell's border type
-                     , grid :: M.Map Cell (Square, CellBorder)
-
-                     } deriving (Show)
 
 type Square = (Row, Col, Size)
 type Row    = Int
@@ -50,6 +43,16 @@ data CellBorder = CTopLeft
                 | CLeft
                 | CNone
                 deriving (Eq, Show)
+
+data Board   = Board { -- Map a square to its shrouded and unshrouded grid cells
+                       _squares :: M.Map Square (S.Set Cell, S.Set Cell)
+
+                       -- Map from grid cell to the square it belongs to and the cell's border type
+                     , _grid :: M.Map Cell (Square, CellBorder)
+
+                     } deriving (Show)
+
+makeLenses ''Board
 
 
 {--- Square<->Cell maps ---}
@@ -174,14 +177,14 @@ borderShroud shrouded = top ++ bottom ++ left ++ right
 
 
 -- Initialize a fully shrouded board from a list of Squares
-board :: [Square] -> Board
-board = foldl add (Board M.empty M.empty)
+makeBoard :: [Square] -> Board
+makeBoard = foldl add (Board M.empty M.empty)
   where
     add :: Board -> Square -> Board
     add Board{..} square = Board squares' grid'
       where
-        squares'  = M.insert square (S.fromList positions, S.empty) squares
-        grid'     = M.union (M.fromList cellmap) grid
+        squares'  = M.insert square (S.fromList positions, S.empty) _squares
+        grid'     = M.union (M.fromList cellmap) _grid
         cellmap   = fmap (square,) <$> cs
         cs        = cells square
         positions = map fst cs
@@ -189,9 +192,9 @@ board = foldl add (Board M.empty M.empty)
 
 -- Deshroud all the tiles in a square
 deshroud :: Square -> Board -> Board
-deshroud square Board{..} = Board squares' grid
+deshroud square Board{..} = Board squares' _grid
   where
-    squares' = M.adjust f square squares
+    squares' = M.adjust f square _squares
 
     f :: (S.Set Cell, S.Set Cell) -> (S.Set Cell, S.Set Cell)
     f (shrouded, deshrouded) = (S.empty, S.union shrouded deshrouded)
@@ -223,7 +226,7 @@ fromFile file = readFile file >>= process
   where
     process = lines >>> take 36
                     >>> map (run parseSquare)
-                    >>> board
+                    >>> makeBoard
                     >>> return
 
 parseSquare :: Parser Square
