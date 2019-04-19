@@ -7,6 +7,7 @@ module Main where
 import qualified Data.Map as M
 import qualified Data.Set as S
 import           Data.Bifunctor (bimap)
+import           Data.List      (sort)
 import           Graphics.Gloss
 import           Graphics.Gloss.Interface.IO.Interact
 import           SquareGame
@@ -46,7 +47,7 @@ window = InWindow "Partridge Square" size position
 
 events :: Event -> World -> World
 events event world = case event of
-  EventMotion (x, y) -> world { message   = show (windowToCell x y)
+  EventMotion (x, y) -> world { message   = show $ windowToSquareEdge world x y
                               , cellHover = windowToCell x y
                               }
   _                  -> world
@@ -60,6 +61,14 @@ boardToWindow row col = (x, y)
     x = (fromIntegral col)    * boardscale + shiftX
     y = (fromIntegral (-row)) * boardscale + shiftY
 
+toWindowY :: Square -> SquareSide -> Float
+toWindowY (row, _, _   ) STop    = fromIntegral (-row       ) * 2 * boardscale + shiftY
+toWindowY (row, _, size) SBottom = fromIntegral (-(row+size)) * 2 * boardscale + shiftY
+
+toWindowX :: Square -> SquareSide -> Float
+toWindowX (_, col, _   ) SLeft   = fromIntegral (col        ) * 2 * boardscale + shiftX
+toWindowX (_, col, size) SRight  = fromIntegral (col+size   ) * 2 * boardscale + shiftX
+
 windowToCell :: Float -> Float -> Maybe Cell
 windowToCell x y
   |    row >= 0 && row < 72
@@ -68,6 +77,23 @@ windowToCell x y
   where
     row = floor $ (y - shiftY) / boardscale * (-1)
     col = floor $ (x - shiftX) / boardscale
+
+windowToSquareEdge :: World -> Float -> Float -> Maybe (Square, SquareSide)
+windowToSquareEdge (World (Board _ grid) _ _) x y = do
+  cell <- windowToCell x y
+  let square = fst $ grid M.! cell
+
+  let distancesToEdges = let top    = toWindowY square STop
+                             bottom = toWindowY square SBottom
+                             left   = toWindowX square SLeft
+                             right  = toWindowX square SRight
+                         in  [ (abs $ y-top,    STop   )
+                             , (abs $ y-bottom, SBottom)
+                             , (abs $ x-left,   SLeft  )
+                             , (abs $ x-right,  SRight ) ]
+
+  return (square, snd $ head $ sort distancesToEdges)
+
 
 displayBoard :: World -> Picture
 displayBoard World{..} = picture

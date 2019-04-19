@@ -28,7 +28,7 @@ type Col    = Int
 type Size   = Int
 
 data SquareSide = STop | SRight | SBottom | SLeft
-                  deriving (Show)
+                  deriving (Eq, Ord, Show)
 
 
 -- Cells are the smallest geometric unit on our board, with an edge size of 1. Each tile has 4
