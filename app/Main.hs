@@ -18,6 +18,10 @@ file = "generation/squares/N8-888666688445522333178876768555777744.sqr"
 data World = World { board     :: Board
                    , message   :: String
                    , cellHover :: Maybe Cell
+
+                   -- The set of shrouded Cells to highlight as a preview of what would be
+                   -- revealed when the user clicks
+                   , cellsToClick :: [Cell]
                    }
 
 -- UI globals
@@ -34,8 +38,8 @@ main :: IO ()
 main = do
   board <- deshroud (0,0,8) . deshroud (0,30,6) <$> fromFile file
   let clicked = click (0,0,8) SRight
-  let board' = deshroudCells board (clicked ++ map fst (cells (0, 0, 36)))
-  let world = World board' "default message" Nothing
+  let board' = board -- deshroudCells board (clicked ++ map fst (cells (0, 0, 36)))
+  let world = World board' "default message" Nothing []
 
   play window white 20 world displayBoard events step
 
@@ -47,8 +51,9 @@ window = InWindow "Partridge Square" size position
 
 events :: Event -> World -> World
 events event world = case event of
-  EventMotion (x, y) -> world { message   = show $ windowToSquareEdge world x y
-                              , cellHover = windowToCell x y
+  EventMotion (x, y) -> world { message      = show $ clickables world x y
+                              , cellHover    = windowToCell x y
+                              , cellsToClick = clickables world x y
                               }
   _                  -> world
 
@@ -79,7 +84,7 @@ windowToCell x y
     col = floor $ (x - shiftX) / boardscale
 
 windowToSquareEdge :: World -> Float -> Float -> Maybe (Square, SquareSide)
-windowToSquareEdge (World (Board _ grid) _ _) x y = do
+windowToSquareEdge (World (Board _ grid) _ _ _) x y = do
   cell <- windowToCell x y
   let square = fst $ grid M.! cell
 
@@ -103,6 +108,17 @@ minBy measure finalize list = go list
       | otherwise              = go (a':rest)
 
 
+clickables :: World -> Float -> Float -> [Cell]
+clickables world@(World (Board squares _) _ _ _) x y = cells
+  where
+    cells = case windowToSquareEdge world x y of
+              Nothing             -> []
+              Just (square, edge) ->
+                let all       = S.fromList $ click square edge
+                    shrouded  = S.fromList $ concat $ M.elems $ M.map (S.toList . fst) squares
+                in  S.toList $ S.intersection all shrouded
+
+
 displayBoard :: World -> Picture
 displayBoard World{..} = picture
   where
@@ -112,9 +128,13 @@ displayBoard World{..} = picture
                                ++ map renderShroud shroud
                                ++ map renderUnshroud unshrouded
                                ++ cellHoveredOver
+                               ++ deshroudableCells
                                ++ msg
 
     full         = fullSquares squares
+
+    deshroudableCells :: [Picture]
+    deshroudableCells = map (Color green . renderShroud) cellsToClick
 
     cellHoveredOver :: [Picture]
     cellHoveredOver = case cellHover of
