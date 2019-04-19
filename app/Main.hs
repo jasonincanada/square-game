@@ -39,7 +39,7 @@ main :: IO ()
 main = do
   board <- deshroud (0,0,8) . deshroud (0,30,6) <$> fromFile file
   let clicked = click (0,0,8) SRight
-  let board' = deshroudCells board (clicked ++ map fst (cells (0, 0, 36)))
+  let board' = board -- deshroudCells board (clicked ++ map fst (cells (0, 0, 36)))
   let world = World board' "default message" Nothing []
 
   play window white 20 world displayBoard events step
@@ -56,7 +56,18 @@ events event world = case event of
                               , cellHover    = windowToCell x y
                               , cellsToClick = clickables world x y
                               }
+
+  EventKey (MouseButton LeftButton) Down _ (x, y)
+                     -> leftClick world
+
   _                  -> world
+
+-- User clicked, so show the cells we've already determined can be deshrouded (during mouseover),
+-- then do to the two types of auto-revealing until there are no further changes to do
+leftClick :: World -> World
+leftClick (World b msg ch cells) =
+  let board' = deshroudCells b cells
+  in  World board' msg ch cells
 
 step :: Float -> World -> World
 step float = id
