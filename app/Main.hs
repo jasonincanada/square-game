@@ -113,11 +113,19 @@ clickables world@(World (Board squares _) _ _ _) x y = cells
   where
     cells = case windowToSquareEdge world x y of
               Nothing             -> []
-              Just (square, edge) ->
-                let all       = S.fromList $ click square edge
-                    shrouded  = S.fromList $ concat $ M.elems $ M.map (S.toList . fst) squares
-                in  S.toList $ S.intersection all shrouded
+              Just (square, edge) -> if fullyRevealed square
+                                     then getFor square edge
+                                     else []
 
+    fullyRevealed :: Square -> Bool
+    fullyRevealed square = S.empty == fst (squares M.! square)
+
+    getFor :: Square -> SquareSide -> [Cell]
+    getFor square edge = S.toList intersect
+      where
+        intersect = S.intersection all shrouded
+        all       = S.fromList $ click square edge
+        shrouded  = foldr S.union S.empty (M.elems $ M.map fst squares)
 
 displayBoard :: World -> Picture
 displayBoard World{..} = picture
