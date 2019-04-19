@@ -14,8 +14,9 @@ import           SquareGame
 file :: FilePath
 file = "generation/squares/N8-888666688445522333178876768555777744.sqr"
 
-data World = World { board :: Board
-                   , message :: String
+data World = World { board     :: Board
+                   , message   :: String
+                   , cellHover :: Maybe Cell
                    }
 
 -- UI globals
@@ -33,7 +34,7 @@ main = do
   board <- deshroud (0,0,8) . deshroud (0,30,6) <$> fromFile file
   let clicked = click (0,0,8) SRight
   let board' = deshroudCells board (clicked ++ map fst (cells (0, 0, 36)))
-  let world = World board' "default message"
+  let world = World board' "default message" Nothing
 
   play window white 20 world displayBoard events step
 
@@ -45,7 +46,9 @@ window = InWindow "Partridge Square" size position
 
 events :: Event -> World -> World
 events event world = case event of
-  EventMotion (x, y) -> world { message = show x ++ "," ++ show y }
+  EventMotion (x, y) -> world { message   = show (windowToCell x y)
+                              , cellHover = windowToCell x y
+                              }
   _                  -> world
 
 step :: Float -> World -> World
@@ -57,6 +60,15 @@ boardToWindow row col = (x, y)
     x = (fromIntegral col)    * boardscale + shiftX
     y = (fromIntegral (-row)) * boardscale + shiftY
 
+windowToCell :: Float -> Float -> Maybe Cell
+windowToCell x y
+  |    row >= 0 && row < 72
+    && col >= 0 && col < 72 = Just (row, col)
+  | otherwise               = Nothing
+  where
+    row = floor $ (y - shiftY) / boardscale * (-1)
+    col = floor $ (x - shiftX) / boardscale
+
 displayBoard :: World -> Picture
 displayBoard World{..} = picture
   where
@@ -65,9 +77,20 @@ displayBoard World{..} = picture
     picture      = mconcat $ map renderFull full
                                ++ map renderShroud shroud
                                ++ map renderUnshroud unshrouded
+                               ++ cellHoveredOver
                                ++ msg
 
     full         = fullSquares squares
+
+    cellHoveredOver :: [Picture]
+    cellHoveredOver = case cellHover of
+      Nothing     -> [Blank]
+      Just (r, c) -> [ Color red $ Polygon [ boardToWindow r     c
+                                           , boardToWindow (r+1) c
+                                           , boardToWindow (r+1) (c+1)
+                                           , boardToWindow r     (c+1)
+                                           , boardToWindow r     c
+                                           ] ]
 
     renderFull :: Square -> Picture
     renderFull (row, col, size) =
@@ -126,13 +149,3 @@ displayBoard World{..} = picture
 
     unshrouded   = map (\cell -> (cell, snd $ grid M.! cell)) unshroud
 
-
-squareScale, cellScale :: [(Int, Int)] -> Path
-squareScale = fmap $ bimap ((*(2*boardscale)) . fromIntegral)
-                           ((*(2*boardscale)) . fromIntegral)
-
-cellScale   = fmap $ bimap ((*boardscale) . fromIntegral)
-                           ((*boardscale) . fromIntegral)
-
-
- 
