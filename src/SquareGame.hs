@@ -15,9 +15,9 @@ import qualified Data.Set as S
 
 {--- Types ---}
 
-type Square = (Row, Col, Size)
-type Row    = Int
-type Col    = Int
+type Square = (SRow, SCol, Size)
+type SRow   = Int
+type SCol   = Int
 type Size   = Int
 
 data SquareSide = STop | SRight | SBottom | SLeft
@@ -29,8 +29,9 @@ data SquareSide = STop | SRight | SBottom | SLeft
 -- full length of the other side of the edge isn't revealed since we don't want to identify
 -- whether there's a square side coincident with the current square (other than the side being
 -- clicked obviously)
-type Cell = Pos
-type Pos  = (Row, Col)
+type Cell = (CRow, CCol)
+type CRow = Int
+type CCol = Int
 
 -- A cell has one and only one of these border types
 data CellBorder = CTopLeft
@@ -116,34 +117,34 @@ cells (row, col, size) = topleft ++ top ++ topright ++
 
 
 -- Get the next coordinate when traversing the cells along a square's side
-next :: SquareSide -> Pos -> Pos
+next :: SquareSide -> Cell -> Cell
 next STop    = bimap id (+1)
 next SBottom = bimap id (+1)
 next SLeft   = bimap (+1) id
 next SRight  = bimap (+1) id
 
 
-type NextPos = Pos -> Pos
+type NextCell = Cell -> Cell
 
 -- Group coordinates into the position and length of their contiguous chunks.  This function
 -- assumes the list is already sorted, which is a safe assumption because keys in M.Map and
 -- values in S.Set are always sorted.  There is a bit of redundancy here because both takeWhile
 -- and drop traverse the position list, so there should be another way to do this that traverses
 -- the list only once
-contigs :: NextPos -> [Pos] -> [(Pos, Int)]
+contigs :: NextCell -> [Cell] -> [(Cell, Int)]
 contigs _    []       = []
-contigs next (pos:ps) = (pos, count) : contigs next rest
+contigs next (cell:cs) = (cell, count) : contigs next rest
   where
     count = length $ takeWhile (uncurry (==))
-                   $ zip (pos:ps) ray
-    ray   = iterate next pos
-    rest  = drop (count-1) ps
+                   $ zip (cell:cs) ray
+    ray   = iterate next cell
+    rest  = drop (count-1) cs
 
 
 -- A contiguous run of unshrouded cells along a border implies the square we're traversing is at
 -- least this size in the orthogonal direction, so list the coordinates that form a square from
 -- this segment of the border
-expand :: (Pos, Int) -> SquareSide -> [Pos]
+expand :: (Cell, Int) -> SquareSide -> [Cell]
 expand ((row, col), n) = \case
   STop    -> [ (row+r, col+c) | r <- [1..n-1], c <- [0..n-1]]
   SBottom -> [ (row-r, col+c) | r <- [1..n-1], c <- [0..n-1]]
@@ -152,7 +153,7 @@ expand ((row, col), n) = \case
 
 
 -- Shrouds of width 1 along the board's border can be deshrouded
-borderShroud :: S.Set Cell -> [Pos]
+borderShroud :: S.Set Cell -> [Cell]
 borderShroud shrouded = top ++ bottom ++ left ++ right
   where
     -- Hardcoded dimensions of an n=8 Partridge Square

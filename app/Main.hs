@@ -77,13 +77,13 @@ leftClick world = world & board .~ board'
 step :: Float -> World -> World
 step float = id
 
-boardToWindow :: Row -> Col -> (Float, Float)
+boardToWindow :: CRow -> CCol -> (Float, Float)
 boardToWindow row col = (x, y)
   where
     x = (fromIntegral col)    * boardscale + shiftX
     y = (fromIntegral (-row)) * boardscale + shiftY
 
-translateToSquareCenter :: Row -> Col -> Size -> Picture -> Picture
+translateToSquareCenter :: SRow -> SCol -> Size -> Picture -> Picture
 translateToSquareCenter row col size pic = Translate x y pic
   where
     x = boardscale * (2*  c  + s) + shiftX - 10
