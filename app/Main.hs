@@ -38,7 +38,7 @@ main :: IO ()
 main = do
   board <- deshroud (0,0,8) . deshroud (0,30,6) <$> fromFile file
   let clicked = click (0,0,8) SRight
-  let board' = board -- deshroudCells board (clicked ++ map fst (cells (0, 0, 36)))
+  let board' = deshroudCells board (clicked ++ map fst (cells (0, 0, 36)))
   let world = World board' "default message" Nothing []
 
   play window white 20 world displayBoard events step
@@ -65,6 +65,15 @@ boardToWindow row col = (x, y)
   where
     x = (fromIntegral col)    * boardscale + shiftX
     y = (fromIntegral (-row)) * boardscale + shiftY
+
+translateToSquareCenter :: Row -> Col -> Size -> Picture -> Picture
+translateToSquareCenter row col size pic = Translate x y pic
+  where
+    x = boardscale * (2*  c  + s) + shiftX - 10
+    y = boardscale * (2*(-r) - s) + shiftY - 10
+    c = fromIntegral col
+    r = fromIntegral row
+    s = fromIntegral size
 
 toWindowY :: Square -> SquareSide -> Float
 toWindowY (row, _, _   ) STop    = fromIntegral (-row       ) * 2 * boardscale + shiftY
@@ -154,17 +163,23 @@ displayBoard World{..} = picture
                                            , boardToWindow r     c
                                            ] ]
 
+    -- Render a fully-unshrouded square
     renderFull :: Square -> Picture
-    renderFull (row, col, size) =
-      Line [ boardToWindow r     c
-           , boardToWindow (r+s) c
-           , boardToWindow (r+s) (c+s)
-           , boardToWindow r     (c+s)
-           , boardToWindow r     c
-           ]
-      where r = 2*row
-            c = 2*col
-            s = 2*size
+    renderFull (row, col, size) = line <> digit
+      where
+        line  = Line [ boardToWindow r     c
+                     , boardToWindow (r+s) c
+                     , boardToWindow (r+s) (c+s)
+                     , boardToWindow r     (c+s)
+                     , boardToWindow r     c ]
+
+        digit = translateToSquareCenter row col size
+                  $ Scale 0.2 0.2
+                  $ Text (show size)
+
+        r = 2*row
+        c = 2*col
+        s = 2*size
 
     renderShroud :: Cell -> Picture
     renderShroud (row, col) =
