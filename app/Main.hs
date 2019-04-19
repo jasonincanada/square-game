@@ -8,6 +8,7 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 import           Data.Bifunctor (bimap)
 import           Data.List      (minimumBy)
+import           Data.Semigroup ((<>))
 import           Graphics.Gloss
 import           Graphics.Gloss.Interface.IO.Interact
 import           SquareGame
