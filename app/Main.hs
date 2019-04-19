@@ -7,7 +7,7 @@ module Main where
 import qualified Data.Map as M
 import qualified Data.Set as S
 import           Data.Bifunctor (bimap)
-import           Data.List      (sort)
+import           Data.List      (minimumBy)
 import           Graphics.Gloss
 import           Graphics.Gloss.Interface.IO.Interact
 import           SquareGame
@@ -92,7 +92,15 @@ windowToSquareEdge (World (Board _ grid) _ _) x y = do
                              , (abs $ x-left,   SLeft  )
                              , (abs $ x-right,  SRight ) ]
 
-  return (square, snd $ head $ sort distancesToEdges)
+  return (square, minBy fst snd distancesToEdges)
+
+minBy :: Ord b => (a -> b) -> (a -> c) -> [a] -> c
+minBy measure finalize list = go list
+  where
+    go [a]                     = finalize a
+    go (a:a':rest)
+      | measure a < measure a' = go (a :rest)
+      | otherwise              = go (a':rest)
 
 
 displayBoard :: World -> Picture
