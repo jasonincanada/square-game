@@ -10,7 +10,6 @@ import qualified Data.Set as S
 import           Control.Lens
 import           Control.Monad.State
 import           Data.Bifunctor (bimap)
-import           Data.List      (nub)
 import           Data.Semigroup ((<>))
 import           Graphics.Gloss
 import           Graphics.Gloss.Interface.IO.Interact
@@ -25,7 +24,7 @@ data World = World { _board     :: Board
 
                    -- The set of shrouded Cells to highlight as a preview of what would be
                    -- revealed when the user clicks
-                   , _cellsToClick :: [Cell]
+                   , _cellsToClick :: CellSet
                    }
 
 makeLenses ''World
@@ -45,7 +44,7 @@ main = do
   board <- deshroud (0,16,8) . deshroud (16,8,8) . deshroud (0,0,8) . deshroud (0,30,6) <$> fromFile file
   let clicked = click (0,0,8) SRight
   let board' = board -- deshroudCells board (clicked ++ map fst (cells (0, 0, 36)))
-  let world = World board' "default message" Nothing []
+  let world = World board' "default message" Nothing S.empty
 
   play window white 20 world displayBoard events step
 
@@ -57,7 +56,7 @@ window = InWindow "Partridge Square" size position
 
 events :: Event -> World -> World
 events event world = case event of
-  EventMotion (x, y) -> world & message      .~ show (clickables world x y)
+  EventMotion (x, y) -> world & message      .~ show (S.toList $ clickables world x y)
                               & cellHover    .~ windowToCell x y
                               & cellsToClick .~ clickables world x y
 
@@ -71,7 +70,7 @@ events event world = case event of
 -- then do to the two types of auto-revealing until there are no further changes to do
 leftClick :: World -> World
 leftClick world = world & board .~ board''
-                        & cellsToClick .~ []
+                        & cellsToClick .~ S.empty
   where
     cells   = world ^. cellsToClick
     grid'   = world ^. board . grid
@@ -81,7 +80,9 @@ leftClick world = world & board .~ board''
     sweepBoard :: State Board ()
     sweepBoard = mapM_ sweepSquare affectedSquares
       where
-        affectedSquares = unique $ map (\cell -> fst $ grid' M.! cell) cells
+        -- Since we're using Data.Set's map, this will de-dupe the resulting list for us,
+        -- which may leave the set smaller than the list--this is fine
+        affectedSquares = S.map (\cell -> fst $ grid' M.! cell) cells
 
     sweepSquare :: Square -> State Board ()
     sweepSquare square = do
@@ -112,7 +113,7 @@ leftClick world = world & board .~ board''
       board <- get
 
       let cellsets = (board ^. squares) M.! square
-      let swept    = S.toList $ sweepEdge square edge cellsets
+      let swept    = sweepEdge square edge cellsets
       let board'   = deshroudCells swept board
 
       put board'
@@ -127,8 +128,6 @@ leftClick world = world & board .~ board''
 
       put board'
 
-
-unique = Data.List.nub
 
 step :: Float -> World -> World
 step float = id
@@ -190,24 +189,24 @@ minBy measure finalize list = go list
       | otherwise              = go (a':rest)
 
 
-clickables :: World -> Float -> Float -> [Cell]
+clickables :: World -> Float -> Float -> CellSet
 clickables world x y = cells
   where
     squares' = world ^. board ^. squares
     cells = case windowToSquareEdge world x y of
-              Nothing             -> []
+              Nothing             -> S.empty
               Just (square, edge) -> if fullyRevealed square
                                      then getFor square edge
-                                     else []
+                                     else S.empty
 
     fullyRevealed :: Square -> Bool
     fullyRevealed square = S.empty == fst (squares' M.! square)
 
-    getFor :: Square -> SquareSide -> [Cell]
-    getFor square edge = S.toList intersect
+    getFor :: Square -> SquareSide -> CellSet
+    getFor square edge = intersect
       where
         intersect = S.intersection all shrouded
-        all       = S.fromList $ click square edge
+        all       = click square edge
         shrouded  = foldr S.union S.empty (M.elems $ M.map fst squares')
 
 
@@ -226,7 +225,7 @@ displayBoard world = picture
     full         = fullSquares squares
 
     deshroudableCells :: [Picture]
-    deshroudableCells = map (Color green . renderShroud) (world ^. cellsToClick)
+    deshroudableCells = map (Color green . renderShroud) (S.toList $ world ^. cellsToClick)
 
     cellHoveredOver :: [Picture]
     cellHoveredOver = case world ^. cellHover of

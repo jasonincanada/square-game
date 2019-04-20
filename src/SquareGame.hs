@@ -29,9 +29,10 @@ data SquareSide = STop | SRight | SBottom | SLeft
 -- full length of the other side of the edge isn't revealed since we don't want to identify
 -- whether there's a square side coincident with the current square (other than the side being
 -- clicked obviously)
-type Cell = (CRow, CCol)
-type CRow = Int
-type CCol = Int
+type Cell    = (CRow, CCol)
+type CRow    = Int
+type CCol    = Int
+type CellSet = S.Set Cell
 
 -- A cell has one and only one of these border types
 data CellBorder = CTopLeft
@@ -46,7 +47,7 @@ data CellBorder = CTopLeft
                 deriving (Eq, Show)
 
 data Board   = Board { -- Map a square to its shrouded and unshrouded grid cells
-                       _squares :: M.Map Square (S.Set Cell, S.Set Cell)
+                       _squares :: M.Map Square (CellSet, CellSet)
 
                        -- Map from grid cell to the square it belongs to and the cell's border type
                      , _grid :: M.Map Cell (Square, CellBorder)
@@ -74,12 +75,12 @@ borderCells (row, col, size) = \case
 
 -- Map a square's side to the cells revealed when clicking that side, which is almost the whole
 -- side but not the very ends, this keeps any coincident edges shrouded
-click :: Square -> SquareSide -> [Cell]
+click :: Square -> SquareSide -> CellSet
 click (row, col, size) = \case
-  STop    -> [ (r-1,  c+i ) | i <- [1..int] ]
-  SBottom -> [ (r+s2, c+i ) | i <- [1..int] ]
-  SLeft   -> [ (r+i,  c-1 ) | i <- [1..int] ]
-  SRight  -> [ (r+i,  c+s2) | i <- [1..int] ]
+  STop    -> S.fromList [ (r-1,  c+i ) | i <- [1..int] ]
+  SBottom -> S.fromList [ (r+s2, c+i ) | i <- [1..int] ]
+  SLeft   -> S.fromList [ (r+i,  c-1 ) | i <- [1..int] ]
+  SRight  -> S.fromList [ (r+i,  c+s2) | i <- [1..int] ]
   where
     c    = col  * 2
     r    = row  * 2
@@ -153,8 +154,8 @@ expand side ((row, col), n) = case side of
 
 
 -- Shrouds of width 1 along the board's border can be deshrouded
-borderShroud :: S.Set Cell -> [Cell]
-borderShroud shrouded = top ++ bottom ++ left ++ right
+borderShroud :: CellSet -> CellSet
+borderShroud shrouded = S.fromList $ top ++ bottom ++ left ++ right
   where
     -- Hardcoded dimensions of an n=8 Partridge Square
     side   = 36*2
@@ -197,23 +198,23 @@ deshroud square Board{..} = Board squares' _grid
   where
     squares' = M.adjust f square _squares
 
-    f :: (S.Set Cell, S.Set Cell) -> (S.Set Cell, S.Set Cell)
+    f :: (CellSet, CellSet) -> (CellSet, CellSet)
     f (shrouded, deshrouded) = (S.empty, S.union shrouded deshrouded)
 
-deshroudCells :: [Cell] -> Board -> Board
-deshroudCells cells board = foldr f board cells
+deshroudCells :: CellSet -> Board -> Board
+deshroudCells cells board = foldr f board (S.toList cells)
   where
     f :: Cell -> Board -> Board
     f cell (Board squares grid) = let square = fst $ grid M.! cell
                                       squares' = M.adjust (deshroudCell cell) square squares
                                   in  Board squares' grid
 
-    deshroudCell :: Cell -> (S.Set Cell, S.Set Cell) -> (S.Set Cell, S.Set Cell)
+    deshroudCell :: Cell -> (CellSet, CellSet) -> (CellSet, CellSet)
     deshroudCell cell (shrouded, unshrouded) = (S.delete cell shrouded, S.insert cell unshrouded)
 
 
 -- Get the shrouded cells we can unveil from sweeping this edge
-sweepEdge :: Square -> SquareSide -> (S.Set Cell, S.Set Cell) -> S.Set Cell
+sweepEdge :: Square -> SquareSide -> (CellSet, CellSet) -> CellSet
 sweepEdge square edge (shrouded, unshrouded) = unveilable
   where
     border       = S.fromList $ borderCells square edge
@@ -226,7 +227,7 @@ sweepEdge square edge (shrouded, unshrouded) = unveilable
 
 
 -- Filter to fully unshrouded squares
-fullSquares :: M.Map Square (S.Set Cell, S.Set Cell) -> [Square]
+fullSquares :: M.Map Square (CellSet, CellSet) -> [Square]
 fullSquares = M.filter ((==S.empty) . fst)
               >>> M.keys
 

@@ -30,16 +30,16 @@ main = hspec $ do
 
   describe "click computes the cells to reveal for side..." $ do
     it "top side" $
-      click (2,4,2) STop    `shouldBe` ( [(3,9),(3,10)]  :: [Cell] )
+      click (2,4,2) STop    `shouldBe` ( S.fromList [(3,9),(3,10)]  :: CellSet )
 
     it "right side" $
-      click (2,4,2) SRight  `shouldBe` ( [(5,12),(6,12)] :: [Cell] )
+      click (2,4,2) SRight  `shouldBe` ( S.fromList [(5,12),(6,12)] :: CellSet )
 
     it "bottom side" $
-      click (2,4,2) SBottom `shouldBe` ( [(8,9),(8,10)]  :: [Cell] )
+      click (2,4,2) SBottom `shouldBe` ( S.fromList [(8,9),(8,10)]  :: CellSet )
 
     it "left side" $
-      click (2,4,2) SLeft   `shouldBe` ( [(5,7),(6,7)]   :: [Cell] )
+      click (2,4,2) SLeft   `shouldBe` ( S.fromList [(5,7),(6,7)]   :: CellSet )
 
 
   describe "cells maps a square to its cells" $ do
@@ -145,16 +145,16 @@ main = hspec $ do
     let right2cols  = S.fromList [(0,71),(1,71),(2,71), (1,70)]
 
     it "deshrouds the top" $
-      borderShroud top2rows    `shouldBe` [(0,0),(0,2)]
+      borderShroud top2rows    `shouldBe` S.fromList [(0,0),(0,2)]
 
     it "deshrouds the bottom" $
-      borderShroud bottom2rows `shouldBe` [(71,0),(71,2)]
+      borderShroud bottom2rows `shouldBe` S.fromList [(71,0),(71,2)]
 
     it "deshrouds the left" $
-      borderShroud left2cols   `shouldBe` [(0,0),(2,0)]
+      borderShroud left2cols   `shouldBe` S.fromList [(0,0),(2,0)]
 
     it "deshrouds the right" $
-      borderShroud right2cols  `shouldBe` [(0,71),(2,71)]
+      borderShroud right2cols  `shouldBe` S.fromList [(0,71),(2,71)]
 
 
   describe "deshroud" $ do
@@ -173,7 +173,7 @@ main = hspec $ do
 
   describe "sweepEdge" $ do
     let Board squares grid = makeBoard testSquares &
-                               deshroudCells [ (0,0), (0,1), (0,2) ]
+                               deshroudCells (S.fromList [ (0,0), (0,1), (0,2) ])
 
     it "sweeps a cube from the top edge" $
       sweepEdge (0,0,4) STop (squares M.! (0,0,4)) `shouldBe` S.fromList [ (1,0),(1,1),(1,2)
