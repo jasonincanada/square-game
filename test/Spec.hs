@@ -2,6 +2,7 @@
 
 import qualified Data.Map as M
 import qualified Data.Set as S
+import Data.Function ((&))
 import SquareGame
 import Test.Hspec
 
@@ -98,19 +99,19 @@ main = hspec $ do
 
   describe "expand" $ do
     it "top side 3-cell deshroud" $
-      expand ((0,0), 3) STop    `shouldBe` [ (1,0), (1,1), (1,2),
+      expand STop ((0,0), 3)    `shouldBe` [ (1,0), (1,1), (1,2),
                                              (2,0), (2,1), (2,2) ]
 
     it "bottom side 3-cell deshroud" $
-      expand ((2,0), 3) SBottom `shouldBe` [ (1,0), (1,1), (1,2),
+      expand SBottom ((2,0), 3) `shouldBe` [ (1,0), (1,1), (1,2),
                                              (0,0), (0,1), (0,2) ]
 
     it "left side 3-cell deshroud" $
-      expand ((0,0), 3) SLeft   `shouldBe` [ (0,1), (0,2),
+      expand SLeft ((0,0), 3)   `shouldBe` [ (0,1), (0,2),
                                              (1,1), (1,2),
                                              (2,1), (2,2) ]
     it "right side 3-cell deshroud" $
-      expand ((0,2), 3) SRight  `shouldBe` [ (0,1), (0,0),
+      expand SRight ((0,2), 3)  `shouldBe` [ (0,1), (0,0),
                                              (1,1), (1,0),
                                              (2,1), (2,0) ]
 
@@ -168,4 +169,13 @@ main = hspec $ do
                                                    (1,8),(1,9),(1,10),(1,11),
                                                    (2,8),(2,9),(2,10),(2,11),
                                                    (3,8),(3,9),(3,10),(3,11)])
+
+
+  describe "sweepEdge" $ do
+    let Board squares grid = makeBoard testSquares &
+                               deshroudCells [ (0,0), (0,1), (0,2) ]
+
+    it "sweeps a cube from the top edge" $
+      sweepEdge (0,0,4) STop (squares M.! (0,0,4)) `shouldBe` S.fromList [ (1,0),(1,1),(1,2)
+                                                                         , (2,0),(2,1),(2,2) ]
 

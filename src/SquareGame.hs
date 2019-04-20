@@ -144,8 +144,8 @@ contigs next (cell:cs) = (cell, count) : contigs next rest
 -- A contiguous run of unshrouded cells along a border implies the square we're traversing is at
 -- least this size in the orthogonal direction, so list the coordinates that form a square from
 -- this segment of the border
-expand :: (Cell, Int) -> SquareSide -> [Cell]
-expand ((row, col), n) = \case
+expand :: SquareSide -> (Cell, Int) -> [Cell]
+expand side ((row, col), n) = case side of
   STop    -> [ (row+r, col+c) | r <- [1..n-1], c <- [0..n-1]]
   SBottom -> [ (row-r, col+c) | r <- [1..n-1], c <- [0..n-1]]
   SLeft   -> [ (row+r, col+c) | r <- [0..n-1], c <- [1..n-1]]
@@ -200,8 +200,8 @@ deshroud square Board{..} = Board squares' _grid
     f :: (S.Set Cell, S.Set Cell) -> (S.Set Cell, S.Set Cell)
     f (shrouded, deshrouded) = (S.empty, S.union shrouded deshrouded)
 
-deshroudCells :: Board -> [Cell] -> Board
-deshroudCells = foldr f
+deshroudCells :: [Cell] -> Board -> Board
+deshroudCells cells board = foldr f board cells
   where
     f :: Cell -> Board -> Board
     f cell (Board squares grid) = let square = fst $ grid M.! cell
@@ -210,6 +210,19 @@ deshroudCells = foldr f
 
     deshroudCell :: Cell -> (S.Set Cell, S.Set Cell) -> (S.Set Cell, S.Set Cell)
     deshroudCell cell (shrouded, unshrouded) = (S.delete cell shrouded, S.insert cell unshrouded)
+
+
+-- Get the shrouded cells we can unveil from sweeping this edge
+sweepEdge :: Square -> SquareSide -> (S.Set Cell, S.Set Cell) -> S.Set Cell
+sweepEdge square edge (shrouded, unshrouded) = unveilable
+  where
+    border       = S.fromList $ borderCells square edge
+    int          = S.intersection border unshrouded
+
+    slats        = contigs (next edge) (S.toList int) :: [(Cell, Int)]
+    targets      = concatMap (expand edge) slats      :: [Cell]
+
+    unveilable   = S.intersection (S.fromList targets) shrouded
 
 
 -- Filter to fully unshrouded squares

@@ -8,8 +8,9 @@ module Main where
 import qualified Data.Map as M
 import qualified Data.Set as S
 import           Control.Lens
+import           Control.Monad.State
 import           Data.Bifunctor (bimap)
-import           Data.List      (minimumBy)
+import           Data.List      (nub)
 import           Data.Semigroup ((<>))
 import           Graphics.Gloss
 import           Graphics.Gloss.Interface.IO.Interact
@@ -41,7 +42,7 @@ boardscale = 10
 
 main :: IO ()
 main = do
-  board <- deshroud (0,0,8) . deshroud (0,30,6) <$> fromFile file
+  board <- deshroud (0,16,8) . deshroud (16,8,8) . deshroud (0,0,8) . deshroud (0,30,6) <$> fromFile file
   let clicked = click (0,0,8) SRight
   let board' = board -- deshroudCells board (clicked ++ map fst (cells (0, 0, 36)))
   let world = World board' "default message" Nothing []
@@ -69,10 +70,65 @@ events event world = case event of
 -- User clicked, so show the cells we've already determined can be deshrouded (during mouseover),
 -- then do to the two types of auto-revealing until there are no further changes to do
 leftClick :: World -> World
-leftClick world = world & board .~ board'
+leftClick world = world & board .~ board''
+                        & cellsToClick .~ []
   where
-    board' = deshroudCells (world ^. board) (world ^. cellsToClick)
+    cells   = world ^. cellsToClick
+    grid'   = world ^. board . grid
+    board'  = deshroudCells cells (world ^. board)
+    board'' = execState sweepBoard board'
 
+    sweepBoard :: State Board ()
+    sweepBoard = mapM_ sweepSquare affectedSquares
+      where
+        affectedSquares = unique $ map (\cell -> fst $ grid' M.! cell) cells
+
+    sweepSquare :: Square -> State Board ()
+    sweepSquare square = do
+
+      before <- shroudsize square
+      sweepEdges square
+      sweepBorder square
+      after <- shroudsize square
+
+      -- Keep recursing until a round of sweeping has no effect
+      if before /= after then sweepSquare square
+                         else return ()
+
+    shroudsize :: Square -> State Board Int
+    shroudsize square = do
+      board <- get
+      let shroud = fst $ (board ^. squares) M.! square
+      return $ S.size shroud
+
+    sweepEdges :: Square -> State Board ()
+    sweepEdges square = sweep square STop
+                     >> sweep square SRight
+                     >> sweep square SBottom
+                     >> sweep square SLeft
+
+    sweep :: Square -> SquareSide -> State Board ()
+    sweep square edge = do
+      board <- get
+
+      let cellsets = (board ^. squares) M.! square
+      let swept    = S.toList $ sweepEdge square edge cellsets
+      let board'   = deshroudCells swept board
+
+      put board'
+
+    sweepBorder :: Square -> State Board ()
+    sweepBorder square = do
+      board  <- get
+
+      let shroud = fst $ (board ^. squares) M.! square
+      let swept  = borderShroud shroud
+      let board' = deshroudCells swept board
+
+      put board'
+
+
+unique = Data.List.nub
 
 step :: Float -> World -> World
 step float = id

@@ -25,6 +25,7 @@ dependencies:
 - hspec
 - gloss
 - lens
+- mtl
 
 library:
   source-dirs: src
