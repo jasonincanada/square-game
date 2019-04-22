@@ -25,6 +25,10 @@ data World = World { _board     :: Board
                    -- The set of shrouded Cells to highlight as a preview of what would be
                    -- revealed when the user clicks
                    , _cellsToClick :: CellSet
+
+                   -- Cache our last render of the board so we don't recompute redundantly every tick
+                   , _rendered    :: Picture
+                   , _renderCount :: Int
                    }
 
 makeLenses ''World
@@ -43,10 +47,19 @@ main :: IO ()
 main = do
   board <- deshroud (0,16,8) . deshroud (16,8,8) . deshroud (0,0,8) . deshroud (0,30,6) <$> fromFile file
   let clicked = click (0,0,8) SRight
-  let board' = board -- deshroudCells board (clicked ++ map fst (cells (0, 0, 36)))
-  let world = World board' "default message" Nothing S.empty
+  let board'  = board -- deshroudCells board (clicked ++ map fst (cells (0, 0, 36)))
+  let world   = World
+                  board'
+                  "default message"
+                  Nothing
+                  S.empty
+                  Blank
+                  0
 
-  play window white 20 world displayBoard events step
+  let withCache = world & rendered .~ (render world)
+
+  play window white 10 withCache displayBoard events step
+
 
 window :: Display
 window = InWindow "Partridge Square" size position
@@ -54,16 +67,26 @@ window = InWindow "Partridge Square" size position
     size         = (windowWidth, windowHeight)
     position     = (100, 100)
 
+
 events :: Event -> World -> World
-events event world = case event of
-  EventMotion (x, y) -> world & message      .~ show (S.toList $ clickables world x y)
-                              & cellHover    .~ windowToCell x y
-                              & cellsToClick .~ clickables world x y
+events event world = case processEvent event world of
+                       Just world' -> world' & rendered .~ render world'
+                                             & renderCount %~ (+1)
+
+                       Nothing     -> world
+
+
+-- Return (Just world) if it requires a re-render or Nothing if not
+processEvent :: Event -> World -> Maybe World
+processEvent event world = case event of
+  EventMotion (x, y) -> Just $ world & message      .~ show (S.toList $ clickables world x y)
+                                     & cellHover    .~ windowToCell x y
+                                     & cellsToClick .~ clickables world x y
 
   EventKey (MouseButton LeftButton) Down _ (x, y)
-                     -> leftClick world
+                     -> Just $ leftClick world
 
-  _                  -> world
+  _                  -> Nothing
 
 
 -- User clicked, so show the cells we've already determined can be deshrouded (during mouseover),
@@ -211,7 +234,10 @@ clickables world x y = cells
 
 
 displayBoard :: World -> Picture
-displayBoard world = picture
+displayBoard world = world ^. rendered
+
+render :: World -> Picture
+render world = picture
   where
     Board squares grid = world ^. board
 
@@ -292,7 +318,8 @@ displayBoard world = picture
     msg :: [Picture]
     msg = [ Translate (-350) (380)
               $ Scale 0.2 0.2
-              $ Text (world ^. message) ]
+              $ Text
+              $ (show $ world ^. renderCount) ++ ", " ++ (world ^. message) ]
 
     shroud       = concat . map S.toList $ map fst (M.elems squares)
     unshroud     = concat . map S.toList $ map snd (M.elems squares)
