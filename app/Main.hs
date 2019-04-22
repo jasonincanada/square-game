@@ -10,9 +10,11 @@ import qualified Data.Set as S
 import           Control.Lens
 import           Control.Monad.State
 import           Data.Bifunctor (bimap)
+import           Data.Function ((&))
 import           Data.Semigroup ((<>))
 import           Graphics.Gloss
 import           Graphics.Gloss.Interface.IO.Interact
+import           System.Random
 import           SquareGame
 
 file :: FilePath
@@ -45,11 +47,12 @@ boardscale = 10
 
 main :: IO ()
 main = do
-  board <- deshroud (0,16,8) . deshroud (16,8,8) . deshroud (0,0,8) . deshroud (0,30,6) <$> fromFile file
+  board <- fromFile file
+
+  let started = randomDeshroud 1 board
   let clicked = click (0,0,8) SRight
-  let board'  = board -- deshroudCells board (clicked ++ map fst (cells (0, 0, 36)))
   let world   = World
-                  board'
+                  started
                   "default message"
                   Nothing
                   S.empty
@@ -59,6 +62,37 @@ main = do
   let withCache = world & rendered .~ (render world)
 
   play window white 10 withCache displayBoard events step
+
+
+
+type Seed = Int
+
+-- Using a deterministic RNG with a provided seed, select a random one of each of the square sizes
+-- 2,3,..8 and deshroud them ahead of time to start the player off with a partially-revealed board.
+-- The same seed will generate the same deshrouding indices every time.  We do this on purpose so
+-- leaderboards can accrue records under the same starting conditions.
+randomDeshroud :: Seed -> Board -> Board
+randomDeshroud seed board = board'
+  where
+    board'  = fst $ foldl f (board, 2) indices
+    indices = take 7 $ randomIndices gen 2
+    gen     = mkStdGen seed
+
+    f :: (Board, Int) -> Int -> (Board, Int)
+    f (board, size) i = let square = getsquares size board !! (i-1)
+                        in  (deshroud square board, size+1)
+
+    -- Get all squares of size n from a board
+    getsquares :: Int -> Board -> [Square]
+    getsquares size board = M.keys (board ^. squares)
+                            & filter (\(_, _, s) -> s == size)
+
+
+-- Generate an infinite list of pseudo-random numbers ranging between 1 and n where n is the index
+-- of the number in the list.  The parent code will use the first 7 of these (square sizes 2..8)
+randomIndices :: RandomGen g => g -> Int -> [Int]
+randomIndices gen n = let (index, gen') = randomR (1, n) gen
+                      in  index : randomIndices gen' (n+1)
 
 
 window :: Display

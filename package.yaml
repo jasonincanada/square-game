@@ -26,6 +26,7 @@ dependencies:
 - gloss
 - lens
 - mtl
+- random
 
 library:
   source-dirs: src
