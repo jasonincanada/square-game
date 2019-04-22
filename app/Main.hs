@@ -9,6 +9,7 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 import           Control.Lens
 import           Control.Monad.State
+import           Control.Monad (when)
 import           Data.Bifunctor (bimap)
 import           Data.Function ((&))
 import           Data.Semigroup ((<>))
@@ -59,7 +60,7 @@ main = do
                   Blank
                   0
 
-  let withCache = world & rendered .~ (render world)
+  let withCache = world & rendered .~ render world
 
   play window white 10 withCache displayBoard events step
 
@@ -150,8 +151,7 @@ leftClick world = world & board .~ board''
       after <- shroudsize square
 
       -- Keep recursing until a round of sweeping has no effect
-      if before /= after then sweepSquare square
-                         else return ()
+      when (before /= after) (sweepSquare square)
 
     shroudsize :: Square -> State Board Int
     shroudsize square = do
@@ -192,11 +192,11 @@ step float = id
 boardToWindow :: CRow -> CCol -> (Float, Float)
 boardToWindow row col = (x, y)
   where
-    x = (fromIntegral col)    * boardscale + shiftX
-    y = (fromIntegral (-row)) * boardscale + shiftY
+    x = fromIntegral col    * boardscale + shiftX
+    y = fromIntegral (-row) * boardscale + shiftY
 
 translateToSquareCenter :: SRow -> SCol -> Size -> Picture -> Picture
-translateToSquareCenter row col size pic = Translate x y pic
+translateToSquareCenter row col size = Translate x y
   where
     x = boardscale * (2*  c  + s) + shiftX - 10
     y = boardscale * (2*(-r) - s) + shiftY - 10
@@ -209,7 +209,7 @@ toWindowY (row, _, _   ) STop    = fromIntegral (-row       ) * 2 * boardscale +
 toWindowY (row, _, size) SBottom = fromIntegral (-(row+size)) * 2 * boardscale + shiftY
 
 toWindowX :: Square -> SquareSide -> Float
-toWindowX (_, col, _   ) SLeft   = fromIntegral (col        ) * 2 * boardscale + shiftX
+toWindowX (_, col, _   ) SLeft   = fromIntegral  col          * 2 * boardscale + shiftX
 toWindowX (_, col, size) SRight  = fromIntegral (col+size   ) * 2 * boardscale + shiftX
 
 windowToCell :: Float -> Float -> Maybe Cell
@@ -238,7 +238,7 @@ windowToSquareEdge world x y = do
   return (square, minBy fst snd distancesToEdges)
 
 minBy :: Ord b => (a -> b) -> (a -> c) -> [a] -> c
-minBy measure finalize list = go list
+minBy measure finalize = go
   where
     go [a]                     = finalize a
     go (a:a':rest)
@@ -350,13 +350,13 @@ render world = picture
 
 
     msg :: [Picture]
-    msg = [ Translate (-350) (380)
+    msg = [ Translate (-350) 380
               $ Scale 0.2 0.2
               $ Text
-              $ (show $ world ^. renderCount) ++ ", " ++ (world ^. message) ]
+              $ show (world ^. renderCount) ++ ", " ++ (world ^. message) ]
 
-    shroud       = concat . map S.toList $ map fst (M.elems squares)
-    unshroud     = concat . map S.toList $ map snd (M.elems squares)
+    shroud       = concatMap (S.toList . fst) (M.elems squares)
+    unshroud     = concatMap (S.toList . snd) (M.elems squares)
 
     unshrouded   = map (\cell -> (cell, snd $ grid M.! cell)) unshroud
 
