@@ -51,6 +51,7 @@ The roadmap is still new and will evolve over time:
   - [ ] Local client phase
     - [x] Render current puzzle board in a desktop window using [gloss](http://hackage.haskell.org/package/gloss)
     - [x] Render hot-zones for edge clicking during mouseover
+    - [x] Randomly deshroud starting board
     - [ ] Take click input and modify board via (coupled) API call
     - [ ] Local filesystem DB for this phase to hold state between requests?
     - [ ] Migrate filesystem DB to [sqlite](https://www.sqlite.org/index.html)
