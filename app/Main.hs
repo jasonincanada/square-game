@@ -142,6 +142,7 @@ leftClick world = world & board .~ board''
 
       before <- shroudsize square
       sweepEdges square
+      sweepEight square
       sweepBorder square
       after <- shroudsize square
 
@@ -169,6 +170,16 @@ leftClick world = world & board .~ board''
       let board'   = deshroudCells swept board
 
       put board'
+
+    sweepEight :: Square -> State Board ()
+    sweepEight square = do
+      board <- get
+
+      let cellsets   = (board ^. squares) M.! square
+      let unveilable = any (sweepableEight square cellsets) [STop, SRight, SBottom, SLeft]
+
+      when unveilable (put $ deshroudCells (fst cellsets) board)
+
 
     sweepBorder :: Square -> State Board ()
     sweepBorder square = do

@@ -226,6 +226,16 @@ sweepEdge square edge (shrouded, unshrouded) = unveilable
     unveilable   = S.intersection (S.fromList targets) shrouded
 
 
+-- If an edge has 14 or more unshrouded cells, it must be an 8-square
+sweepableEight :: Square -> (CellSet, CellSet) -> SquareSide -> Bool
+sweepableEight square (_, unshrouded) edge = unveilable
+  where
+    border       = S.fromList $ borderCells square edge
+    int          = S.intersection border unshrouded
+    unveilable   = S.size int >= 2*n - 2
+    n            = 8
+
+
 -- Filter to fully unshrouded squares
 fullSquares :: M.Map Square (CellSet, CellSet) -> [Square]
 fullSquares = M.filter ((==S.empty) . fst)
