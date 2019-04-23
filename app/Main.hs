@@ -16,6 +16,7 @@ import           Data.Semigroup ((<>))
 import           Graphics.Gloss
 import           Graphics.Gloss.Interface.IO.Interact
 import           System.Random
+import           Helpers (filteredKeys, minBy, randomIndices)
 import           SquareGame
 
 file :: FilePath
@@ -85,15 +86,9 @@ randomDeshroud seed board = board'
 
     -- Get all squares of size n from a board
     getsquares :: Int -> Board -> [Square]
-    getsquares size board = M.keys (board ^. squares)
-                            & filter (\(_, _, s) -> s == size)
-
-
--- Generate an infinite list of pseudo-random numbers ranging between 1 and n where n is the index
--- of the number in the list.  The parent code will use the first 7 of these (square sizes 2..8)
-randomIndices :: RandomGen g => g -> Int -> [Int]
-randomIndices gen n = let (index, gen') = randomR (1, n) gen
-                      in  index : randomIndices gen' (n+1)
+    getsquares size board = filteredKeys p (board ^. squares)
+      where
+        p (_, _, s) = s == size
 
 
 window :: Display
@@ -236,14 +231,6 @@ windowToSquareEdge world x y = do
                              , (abs $ x-right,  SRight ) ]
 
   return (square, minBy fst snd distancesToEdges)
-
-minBy :: Ord b => (a -> b) -> (a -> c) -> [a] -> c
-minBy measure finalize = go
-  where
-    go [a]                     = finalize a
-    go (a:a':rest)
-      | measure a < measure a' = go (a :rest)
-      | otherwise              = go (a':rest)
 
 
 clickables :: World -> Float -> Float -> CellSet

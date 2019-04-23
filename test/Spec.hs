@@ -3,8 +3,12 @@
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.Function ((&))
-import SquareGame
+import System.Random (mkStdGen)
 import Test.Hspec
+
+import Helpers
+import SquareGame
+
 
 -- These would be read from a file/database. This is our mock board, a mini 4x6 board that
 -- has one 4x4 square to the left of two stacked 2x2 squares
@@ -178,4 +182,27 @@ main = hspec $ do
     it "sweeps a cube from the top edge" $
       sweepEdge (0,0,4) STop (squares M.! (0,0,4)) `shouldBe` S.fromList [ (1,0),(1,1),(1,2)
                                                                          , (2,0),(2,1),(2,2) ]
+
+
+  {- src/Helpers.hs -}
+  context "Helpers" $ do
+
+    describe "filteredKeys" $ do
+      let map = M.fromList [(2,"foo"), (3,"bar"), (4,"baz")]
+
+      it "filters keys" $
+        filteredKeys even map `shouldBe` [2, 4]
+
+
+    describe "randomIndices" $ do
+      let gen    = mkStdGen 1
+      let list   = randomIndices gen 1
+      let bounds = [1..]
+
+      let respectsRange l b = all (uncurry (<=))
+                                $ take 100
+                                $ zip l b
+
+      it "should generate numbers within an increasing range" $
+        respectsRange list bounds `shouldBe` True
 
