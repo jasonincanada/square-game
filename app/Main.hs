@@ -186,8 +186,8 @@ leftClick = execState click
 
     shroudsize :: Square -> State Board Int
     shroudsize square = do
-      board <- get
-      let shroud = fst $ (board ^. squares) M.! square
+      squares <- gets $ view squares
+      let shroud = fst $ squares M.! square
       return $ S.size shroud
 
     sweepEdges :: Square -> State Board ()
