@@ -2,16 +2,11 @@
 
 module Main where
 
-import qualified Data.Map as M
 import qualified Data.Set as S
 import           Control.Lens
-import           Control.Monad  (when)
-import           Data.Char      (digitToInt)
-import           Data.Function  ((&))
+import           Data.Char (digitToInt)
 import           Graphics.Gloss
 import           Graphics.Gloss.Interface.IO.Interact
-import           System.Random
-import           Helpers (filteredKeys, randomIndices)
 import           SquareGame
 import           SquareGame.Actions
 import           SquareGame.Render
@@ -38,30 +33,6 @@ main = do
   let withCache = world & rendered .~ render world
 
   play window white 10 withCache displayBoard events step
-
-
-type Seed = Int
-
--- Using a deterministic RNG with a provided seed, select a random one of each of the square sizes
--- 2,3,..8 and deshroud them ahead of time to start the player off with a partially-revealed board.
--- The same seed will generate the same deshrouding indices every time.  We do this on purpose so
--- leaderboards can accrue records under the same starting conditions.
-randomDeshroud :: Seed -> Board -> Board
-randomDeshroud seed board = board'
-  where
-    board'  = fst $ foldl f (board, 2) indices
-    indices = take 7 $ randomIndices gen 2
-    gen     = mkStdGen seed
-
-    f :: (Board, Int) -> Int -> (Board, Int)
-    f (board, size) i = let square = getsquares size board !! (i-1)
-                        in  (deshroud square board, size+1)
-
-    -- Get all squares of size n from a board
-    getsquares :: Int -> Board -> [Square]
-    getsquares size board = filteredKeys p (board ^. squares)
-      where
-        p (_, _, s) = s == size
 
 
 window :: Display

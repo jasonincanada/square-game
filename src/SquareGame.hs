@@ -5,12 +5,14 @@
 
 module SquareGame where
 
-import Control.Arrow  ((>>>))
-import Control.Lens
-import Data.Bifunctor (bimap)
-import NanoParsec
 import qualified Data.Map as M
 import qualified Data.Set as S
+import           Control.Arrow  ((>>>))
+import           Control.Lens
+import           Data.Bifunctor (bimap)
+import           System.Random hiding (next)
+import           NanoParsec
+import           Helpers (filteredKeys, randomIndices)
 
 
 {--- Types ---}
@@ -243,6 +245,30 @@ sweepableEight square (_, unshrouded) edge = unveilable
 fullSquares :: M.Map Square (CellSet, CellSet) -> [Square]
 fullSquares = M.filter ((==S.empty) . fst)
               >>> M.keys
+
+
+type Seed = Int
+
+-- Using a deterministic RNG with a provided seed, select a random one of each of the square sizes
+-- 2,3,..8 and deshroud them ahead of time to start the player off with a partially-revealed board.
+-- The same seed will generate the same deshrouding indices every time.  We do this on purpose so
+-- leaderboards can accrue records under the same starting conditions.
+randomDeshroud :: Seed -> Board -> Board
+randomDeshroud seed board = board'
+  where
+    board'  = fst $ foldl f (board, 2) indices
+    indices = take 7 $ randomIndices gen 2
+    gen     = mkStdGen seed
+
+    f :: (Board, Int) -> Int -> (Board, Int)
+    f (board, size) i = let square = getsquares size board !! (i-1)
+                        in  (deshroud square board, size+1)
+
+    -- Get all squares of size n from a board
+    getsquares :: Int -> Board -> [Square]
+    getsquares size board = filteredKeys p (board ^. squares)
+      where
+        p (_, _, s) = s == size
 
 
 clampSquare :: Square -> Square
