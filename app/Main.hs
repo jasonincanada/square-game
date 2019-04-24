@@ -42,6 +42,10 @@ window = InWindow "Partridge Square" size position
     position     = (100, 100)
 
 
+displayBoard :: World -> Picture
+displayBoard world = world ^. rendered
+
+
 events :: Event -> World -> World
 events event world = case processEvent event world of
                        Just world' -> world' & rendered .~ render world'
@@ -70,6 +74,3 @@ processEvent event world = case event of
 
 step :: Float -> World -> World
 step float = id
-
-displayBoard :: World -> Picture
-displayBoard world = world ^. rendered
