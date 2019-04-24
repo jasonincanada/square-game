@@ -147,7 +147,7 @@ processEvent event world = case event of
 
 
 -- User clicked, so show the cells we've already determined can be deshrouded (during mouseover),
--- then do to the two types of auto-revealing until there are no further changes to do
+-- then do to the three types of auto-revealing until there are no further changes to do
 leftClick :: World -> World
 leftClick = execState click
   where
