@@ -87,30 +87,16 @@ processEvent event world = case event of
                                      & cellsToClick .~ clickables world x y
 
   -- TODO: Need to debounce the mousewheel events
-  EventKey (MouseButton WheelUp) _ _ (x, y)
-                     -> case world ^. placing of
-                          Nothing -> Just $ world & placing .~ Just 2
-                          Just 8  -> Nothing
-                          Just x  -> Just $ world & placing .~ Just (x+1)
+  EventKey (MouseButton WheelUp   ) _    _ _ -> Just $ wheelUp world
+  EventKey (MouseButton WheelDown ) _    _ _ -> Just $ wheelDown world
+  EventKey (MouseButton LeftButton) Down _ _ -> Just $ leftClick world
 
-  EventKey (MouseButton WheelDown) _ _ (x, y)
-                     -> case world ^. placing of
-                          Nothing -> Just $ world & placing .~ Just 2
-                          Just 1  -> Nothing
-                          Just x  -> Just $ world & placing .~ Just (x-1)
+  EventKey (Char '0') Down _ _ -> Just $ clearPlacingSquare world
+  EventKey (Char  c ) Down _ _ -> if c `elem` "12345678"
+                                  then Just $ digitPress (digitToInt c) world
+                                  else Nothing
 
-  EventKey (MouseButton LeftButton) Down _ (x, y)
-                     -> Just $ leftClick world
-
-  EventKey (Char '0') Down _ _
-                     -> Just $ clearPlacingSquare world
-
-  EventKey (Char  c ) Down _ _
-                     -> if c `elem` "12345678"
-                        then Just $ digitPress (digitToInt c) world
-                        else Nothing
-
-  _                  -> Nothing
+  _                            -> Nothing
 
 
 

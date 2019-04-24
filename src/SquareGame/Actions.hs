@@ -2,6 +2,8 @@ module SquareGame.Actions (
     leftClick
   , clearPlacingSquare
   , digitPress
+  , wheelUp
+  , wheelDown
   ) where
 
 import qualified Data.Map as M
@@ -103,3 +105,16 @@ leftClick = execState click
       let swept  = borderShroud shroud
 
       modify $ deshroudCells swept
+
+
+wheelUp :: World -> World
+wheelUp world   = world & case world ^. placing of
+                            Nothing   -> placing .~ Just 2
+                            Just 8    -> id
+                            Just size -> placing .~ Just (size+1)
+
+wheelDown :: World -> World
+wheelDown world = world & case world ^. placing of
+                            Nothing -> placing .~ Just 2
+                            Just 1  -> id
+                            Just x  -> placing .~ Just (x-1)
