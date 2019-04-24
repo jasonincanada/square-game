@@ -143,6 +143,6 @@ wheelUp world   = world & case world ^. placing of
 
 wheelDown :: World -> World
 wheelDown world = world & case world ^. placing of
-                            Nothing   -> placing .~ Just 2
+                            Nothing   -> placing .~ Just 8
                             Just 1    -> id
                             Just size -> placing .~ Just (size-1)
