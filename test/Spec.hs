@@ -184,6 +184,14 @@ main = hspec $ do
                                                                          , (2,0),(2,1),(2,2) ]
 
 
+  describe "clampSquare" $ do
+    it "clamps to the top/left"      $ clampSquare (-2  , -2  , 4) `shouldBe` (0 , 0 , 4)
+    it "clamps to the top"           $ clampSquare (-2  ,  0  , 4) `shouldBe` (0 , 0 , 4)
+    it "doesn't clamp on the left"   $ clampSquare ( 0  ,  0  , 4) `shouldBe` (0 , 0 , 4)
+    it "doesn't clamp on the right"  $ clampSquare (32  , 32  , 4) `shouldBe` (32, 32, 4)
+    it "clamps to the bottom/right"  $ clampSquare (32+1, 32+1, 4) `shouldBe` (32, 32, 4)
+
+
   {- src/Helpers.hs -}
   context "Helpers" $ do
 

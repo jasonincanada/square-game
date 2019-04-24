@@ -11,6 +11,7 @@ import           Control.Lens
 import           Control.Monad.State
 import           Control.Monad (when)
 import           Data.Bifunctor (bimap)
+import           Data.Char      (digitToInt)
 import           Data.Function ((&))
 import           Data.Semigroup ((<>))
 import           Graphics.Gloss
@@ -33,6 +34,9 @@ data World = World { _board     :: Board
                    -- Cache our last render of the board so we don't recompute redundantly every tick
                    , _rendered    :: Picture
                    , _renderCount :: Int
+
+                   -- The size and position of the square we're placing, if any
+                   , _placing :: Maybe Size
                    }
 
 makeLenses ''World
@@ -60,6 +64,7 @@ main = do
                   S.empty
                   Blank
                   0
+                  Nothing
 
   let withCache = world & rendered .~ render world
 
@@ -109,12 +114,33 @@ events event world = case processEvent event world of
 -- Return (Just world) if it requires a re-render or Nothing if not
 processEvent :: Event -> World -> Maybe World
 processEvent event world = case event of
-  EventMotion (x, y) -> Just $ world & message      .~ show (S.toList $ clickables world x y)
+  EventMotion (x, y) -> Just $ world & message      .~ show (world ^. placing)
                                      & cellHover    .~ windowToCell x y
                                      & cellsToClick .~ clickables world x y
 
+  -- TODO: Need to debounce the mousewheel events
+  EventKey (MouseButton WheelUp) _ _ (x, y)
+                     -> case world ^. placing of
+                          Nothing -> Just $ world & placing .~ Just 2
+                          Just 8  -> Nothing
+                          Just x  -> Just $ world & placing .~ Just (x+1)
+
+  EventKey (MouseButton WheelDown) _ _ (x, y)
+                     -> case world ^. placing of
+                          Nothing -> Just $ world & placing .~ Just 2
+                          Just 1  -> Nothing
+                          Just x  -> Just $ world & placing .~ Just (x-1)
+
   EventKey (MouseButton LeftButton) Down _ (x, y)
                      -> Just $ leftClick world
+
+  EventKey (Char '0') Down _ _
+                     -> Just $ world & placing .~ Nothing
+
+  EventKey (Char  c ) Down _ _
+                     -> if c `elem` "12345678"
+                        then Just $ world & placing .~ Just (digitToInt c)
+                        else Nothing
 
   _                  -> Nothing
 
@@ -273,14 +299,38 @@ render world = picture
   where
     Board squares grid = world ^. board
 
-    picture      = mconcat $ map renderFull full
+    picture      = if placeableSquare == Nothing
+                   then mconcat $ map renderFull full
                                ++ map renderShroud shroud
                                ++ map renderUnshroud unshrouded
                                ++ cellHoveredOver
                                ++ deshroudableCells
                                ++ msg
+                   else mconcat $ map renderFull full
+                               ++ map renderShroud shroud
+                               ++ map renderUnshroud unshrouded
+                               ++ cellHoveredOver
+                               ++ placingSquare
+                               ++ msg
 
     full         = fullSquares squares
+
+
+
+    placingSquare :: [Picture]
+    placingSquare = case placeableSquare of
+                      Nothing     -> mempty
+                      Just square -> [Color yellow $ renderFull square]
+
+    placeableSquare :: Maybe Square
+    placeableSquare = do
+      size         <- world ^. placing
+      (crow, ccol) <- world ^. cellHover
+
+      return $ let row = crow `div` 2 - size `div` 2
+                   col = ccol `div` 2 - size `div` 2
+               in  clampSquare (row, col, size)
+
 
     deshroudableCells :: [Picture]
     deshroudableCells = map (Color green . renderShroud) (S.toList $ world ^. cellsToClick)

@@ -242,6 +242,13 @@ fullSquares = M.filter ((==S.empty) . fst)
               >>> M.keys
 
 
+clampSquare :: Square -> Square
+clampSquare (row, col, size) = (clamp row, clamp col, size)
+  where
+    clamp i = max 0 (if i + size >= 36
+                     then 36-size
+                     else i)
+
 
 {--- IO operations ---}
 
@@ -284,4 +291,3 @@ isShrouded cell (Board squares grid) = cell `S.member` shroud
 squareAt :: Cell -> Board -> Int
 squareAt cell (Board _ grid) = thd $ fst $ grid M.! cell
   where thd (_, _, x) = x
-
