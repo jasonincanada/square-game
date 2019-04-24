@@ -46,11 +46,14 @@ data CellBorder = CTopLeft
                 | CNone
                 deriving (Eq, Show)
 
+type SquareMap = M.Map Square (CellSet, CellSet)
+type CellGrid  = M.Map Cell (Square, CellBorder)
+
 data Board   = Board { -- Map a square to its shrouded and unshrouded grid cells
-                       _squares :: M.Map Square (CellSet, CellSet)
+                       _squares :: SquareMap
 
                        -- Map from grid cell to the square it belongs to and the cell's border type
-                     , _grid :: M.Map Cell (Square, CellBorder)
+                     , _grid :: CellGrid
 
                      } deriving (Show)
 

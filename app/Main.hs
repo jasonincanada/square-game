@@ -7,6 +7,7 @@ module Main where
 
 import qualified Data.Map as M
 import qualified Data.Set as S
+import           Control.Arrow ((>>>))
 import           Control.Lens
 import           Control.Monad.State
 import           Control.Monad (when)
@@ -148,20 +149,25 @@ processEvent event world = case event of
 -- User clicked, so show the cells we've already determined can be deshrouded (during mouseover),
 -- then do to the two types of auto-revealing until there are no further changes to do
 leftClick :: World -> World
-leftClick world = world & board .~ board''
-                        & cellsToClick .~ S.empty
+leftClick = execState click
   where
-    cells   = world ^. cellsToClick
-    grid'   = world ^. board . grid
-    board'  = deshroudCells cells (world ^. board)
-    board'' = execState sweepBoard board'
+    click :: State World ()
+    click = do
+      grid    <- gets $ view (board . grid)
+      clicked <- gets $ view cellsToClick
 
-    sweepBoard :: State Board ()
-    sweepBoard = mapM_ sweepSquare affectedSquares
+      modify $ over board $ deshroudCells clicked
+                            >>> execState (sweepBoard grid clicked)
+
+      modify $ set cellsToClick S.empty
+
+
+    sweepBoard :: CellGrid -> CellSet -> State Board ()
+    sweepBoard grid cells = mapM_ sweepSquare affectedSquares
       where
         -- Since we're using Data.Set's map, this will de-dupe the resulting list for us,
         -- which may leave the set smaller than the list--this is fine
-        affectedSquares = S.map (\cell -> fst $ grid' M.! cell) cells
+        affectedSquares = S.map (\cell -> fst $ grid M.! cell) cells
 
     sweepSquare :: Square -> State Board ()
     sweepSquare square = do
