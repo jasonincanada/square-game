@@ -184,11 +184,13 @@ leftClick = execState click
       -- Keep recursing until a round of sweeping has no effect
       when (before /= after) (sweepSquare square)
 
+
     shroudsize :: Square -> State Board Int
     shroudsize square = do
       squares <- gets $ view squares
       let shroud = fst $ squares M.! square
       return $ S.size shroud
+
 
     sweepEdges :: Square -> State Board ()
     sweepEdges square = sweep square STop
@@ -196,35 +198,35 @@ leftClick = execState click
                      >> sweep square SBottom
                      >> sweep square SLeft
 
+
     sweep :: Square -> SquareSide -> State Board ()
     sweep square edge = do
-      board <- get
+      squares <- gets $ view squares
 
-      let cellsets = (board ^. squares) M.! square
+      let cellsets = squares M.! square
       let swept    = sweepEdge square edge cellsets
-      let board'   = deshroudCells swept board
 
-      put board'
+      modify $ deshroudCells swept
+
 
     sweepEight :: Square -> State Board ()
     sweepEight square = do
-      board <- get
+      squares <- gets $ view squares
 
-      let cellsets   = (board ^. squares) M.! square
+      let cellsets   = squares M.! square
       let unveilable = any (sweepableEight square cellsets) [STop, SRight, SBottom, SLeft]
 
-      when unveilable (put $ deshroudCells (fst cellsets) board)
+      when unveilable (modify $ deshroudCells (fst cellsets))
 
 
     sweepBorder :: Square -> State Board ()
     sweepBorder square = do
-      board  <- get
+      squares <- gets $ view squares
 
-      let shroud = fst $ (board ^. squares) M.! square
+      let shroud = fst $ squares M.! square
       let swept  = borderShroud shroud
-      let board' = deshroudCells swept board
 
-      put board'
+      modify $ deshroudCells swept
 
 
 step :: Float -> World -> World
