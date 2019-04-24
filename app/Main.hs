@@ -35,7 +35,7 @@ data World = World { _board     :: Board
                    , _rendered    :: Picture
                    , _renderCount :: Int
 
-                   -- The size and position of the square we're placing, if any
+                   -- The size of the square we're placing, if any
                    , _placing :: Maybe Size
                    }
 
@@ -314,7 +314,6 @@ render world = picture
                                ++ msg
 
     full         = fullSquares squares
-
 
 
     placingSquare :: [Picture]
