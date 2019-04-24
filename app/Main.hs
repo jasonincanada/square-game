@@ -64,10 +64,10 @@ processEvent event world = case event of
   EventKey (MouseButton WheelDown ) _    _ _ -> Just $ wheelDown world
   EventKey (MouseButton LeftButton) Down _ _ -> Just $ leftClick world
 
-  EventKey (Char '0') Down _ _ -> Just $ clearPlacingSquare world
-  EventKey (Char  c ) Down _ _ -> if c `elem` "12345678"
-                                  then Just $ digitPress (digitToInt c) world
-                                  else Nothing
+  EventKey (Char '0'              ) Down _ _ -> Just $ clearPlacingSquare world
+  EventKey (Char  c               ) Down _ _ -> if c `elem` "12345678"
+                                                then Just $ digitPress (digitToInt c) world
+                                                else Nothing
 
   _                            -> Nothing
 
