@@ -103,11 +103,11 @@ processEvent event world = case event of
                      -> Just $ leftClick world
 
   EventKey (Char '0') Down _ _
-                     -> Just $ world & placing .~ Nothing
+                     -> Just $ clearPlacingSquare world
 
   EventKey (Char  c ) Down _ _
                      -> if c `elem` "12345678"
-                        then Just $ world & placing .~ Just (digitToInt c)
+                        then Just $ digitPress (digitToInt c) world
                         else Nothing
 
   _                  -> Nothing

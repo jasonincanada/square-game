@@ -1,6 +1,7 @@
 module SquareGame.Actions (
     leftClick
-   
+  , clearPlacingSquare
+  , digitPress
   ) where
 
 import qualified Data.Map as M
@@ -10,6 +11,16 @@ import           Control.Lens
 import           Control.Monad.State
 import           SquareGame
 import           SquareGame.World
+
+
+-- User typed 0 so clear the placing square
+clearPlacingSquare :: World -> World
+clearPlacingSquare = set placing Nothing
+
+-- User typed 1,2,..8, so set the size of placing square to it
+digitPress :: Int -> World -> World
+digitPress size = set placing (Just size)
+
 
 -- User clicked, so show the cells we've already determined can be deshrouded (during mouseover),
 -- then do to the three types of auto-revealing until there are no further changes to do
