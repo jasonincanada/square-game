@@ -69,7 +69,7 @@ processEvent event world = case event of
                                                 then Just $ digitPress (digitToInt c) world
                                                 else Nothing
 
-  _                            -> Nothing
+  otherwise                                  -> Nothing
 
 
 step :: Float -> World -> World
