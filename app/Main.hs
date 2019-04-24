@@ -82,11 +82,9 @@ events event world = case processEvent event world of
 -- Return (Just world) if it requires a re-render or Nothing if not
 processEvent :: Event -> World -> Maybe World
 processEvent event world = case event of
-  EventMotion (x, y) -> Just $ world & message      .~ show (world ^. placing)
-                                     & cellHover    .~ windowToCell x y
-                                     & cellsToClick .~ clickables world x y
 
-  -- TODO: Need to debounce the mousewheel events
+  EventMotion (x, y)                         -> Just $ mouseMove (x, y) world
+
   EventKey (MouseButton WheelUp   ) _    _ _ -> Just $ wheelUp world
   EventKey (MouseButton WheelDown ) _    _ _ -> Just $ wheelDown world
   EventKey (MouseButton LeftButton) Down _ _ -> Just $ leftClick world
@@ -99,32 +97,8 @@ processEvent event world = case event of
   _                            -> Nothing
 
 
-
 step :: Float -> World -> World
 step float = id
 
-
-clickables :: World -> Float -> Float -> CellSet
-clickables world x y = cells
-  where
-    squares' = world ^. board ^. squares
-    cells = case windowToSquareEdge world x y of
-              Nothing             -> S.empty
-              Just (square, edge) -> if fullyRevealed square
-                                     then getFor square edge
-                                     else S.empty
-
-    fullyRevealed :: Square -> Bool
-    fullyRevealed square = S.empty == fst (squares' M.! square)
-
-    getFor :: Square -> SquareSide -> CellSet
-    getFor square edge = intersect
-      where
-        intersect = S.intersection all shrouded
-        all       = click square edge
-        shrouded  = foldr S.union S.empty (M.elems $ M.map fst squares')
-
-
 displayBoard :: World -> Picture
 displayBoard world = world ^. rendered
-

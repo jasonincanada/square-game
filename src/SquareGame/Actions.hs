@@ -2,6 +2,7 @@ module SquareGame.Actions (
     leftClick
   , clearPlacingSquare
   , digitPress
+  , mouseMove
   , wheelUp
   , wheelDown
   ) where
@@ -12,6 +13,7 @@ import           Control.Arrow ((>>>))
 import           Control.Lens
 import           Control.Monad.State
 import           SquareGame
+import           SquareGame.Render (windowToCell, windowToSquareEdge)
 import           SquareGame.World
 
 
@@ -105,6 +107,32 @@ leftClick = execState click
       let swept  = borderShroud shroud
 
       modify $ deshroudCells swept
+
+
+mouseMove :: (Float, Float) -> World -> World
+mouseMove (x, y) world = world & message      .~ show (world ^. placing)
+                               & cellHover    .~ windowToCell x y
+                               & cellsToClick .~ clickables world x y
+
+clickables :: World -> Float -> Float -> CellSet
+clickables world x y = cells
+  where
+    squares' = world ^. board ^. squares
+    cells = case windowToSquareEdge world x y of
+              Nothing             -> S.empty
+              Just (square, edge) -> if fullyRevealed square
+                                     then getFor square edge
+                                     else S.empty
+
+    fullyRevealed :: Square -> Bool
+    fullyRevealed square = S.empty == fst (squares' M.! square)
+
+    getFor :: Square -> SquareSide -> CellSet
+    getFor square edge = intersect
+      where
+        intersect = S.intersection all shrouded
+        all       = click square edge
+        shrouded  = foldr S.union S.empty (M.elems $ M.map fst squares')
 
 
 wheelUp :: World -> World
