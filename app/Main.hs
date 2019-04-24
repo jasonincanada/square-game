@@ -153,21 +153,24 @@ leftClick = execState click
   where
     click :: State World ()
     click = do
-      grid    <- gets $ view (board . grid)
       clicked <- gets $ view cellsToClick
 
       modify $ over board $ deshroudCells clicked
-                            >>> execState (sweepBoard grid clicked)
+                            >>> execState (sweepBoard clicked)
 
       modify $ set cellsToClick S.empty
 
 
-    sweepBoard :: CellGrid -> CellSet -> State Board ()
-    sweepBoard grid cells = mapM_ sweepSquare affectedSquares
-      where
-        -- Since we're using Data.Set's map, this will de-dupe the resulting list for us,
-        -- which may leave the set smaller than the list--this is fine
-        affectedSquares = S.map (\cell -> fst $ grid M.! cell) cells
+    sweepBoard :: CellSet -> State Board ()
+    sweepBoard cells = do
+      grid <- gets $ view grid
+
+      -- Since we're using Data.Set's map, this will de-dupe the resulting list for us,
+      -- which may leave the set smaller than the list--this is fine
+      let affectedSquares = S.map (\cell -> fst $ grid M.! cell) cells
+
+      mapM_ sweepSquare affectedSquares
+
 
     sweepSquare :: Square -> State Board ()
     sweepSquare square = do
