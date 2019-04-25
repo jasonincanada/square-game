@@ -49,7 +49,7 @@ leftClick = do
     place :: State World ()
     place = do
       Just square <- gets $ view squareToPlace
-      overlapping <- any (overlaps square) <$> alreadyCovered
+      overlapping <- any (square `overlaps`) <$> alreadyCovered
 
       if overlapping
         then modify $ set message $ "Can't place square at " ++ show square
