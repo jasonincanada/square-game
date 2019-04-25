@@ -154,7 +154,7 @@ clickables x y world = cells
         shrouded  = foldr S.union S.empty (M.elems $ M.map fst squares')
 
 
-wheelUp :: State World Bool
+wheelUp :: WorldAction
 wheelUp = wheel up
   where
     up :: Maybe Size -> Size
@@ -162,7 +162,7 @@ wheelUp = wheel up
     up (Just 8)    = 8
     up (Just size) = size + 1
 
-wheelDown :: State World Bool
+wheelDown :: WorldAction
 wheelDown = wheel down
   where
     down :: Maybe Size -> Size
@@ -170,7 +170,7 @@ wheelDown = wheel down
     down (Just 1)    = 1
     down (Just size) = size - 1
 
-wheel :: (Maybe Size -> Size) -> State World Bool
+wheel :: (Maybe Size -> Size) -> WorldAction
 wheel f = do
   modify $ over placing (Just . f)
   return True
