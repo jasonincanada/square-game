@@ -4,6 +4,7 @@ module Main where
 
 import qualified Data.Set as S
 import           Control.Lens
+import           Control.Monad.State
 import           Data.Char (digitToInt)
 import           Graphics.Gloss
 import           Graphics.Gloss.Interface.IO.Interact
@@ -48,28 +49,29 @@ displayBoard world = world ^. rendered
 
 events :: Event -> World -> World
 events event world = case processEvent event world of
-                       Just world' -> world' & rendered .~ render world'
-                                             & renderCount %~ (+1)
+                       (True, world') -> world' & rendered .~ render world'
+                                                & renderCount %~ (+1)
 
-                       Nothing     -> world
+                       (_   , world') -> world'
 
 
--- Return (Just world) if it requires a re-render or Nothing if not
-processEvent :: Event -> World -> Maybe World
-processEvent event world = case event of
+processEvent :: Event -> World -> (Bool, World)
+processEvent event world = runState state world
+  where
+    state = case event of
 
-  EventMotion (x, y)                         -> Just $ mouseMove (x, y) world
+      EventMotion (x, y)                         -> mouseMove (x, y)
 
-  EventKey (MouseButton WheelUp   ) _    _ _ -> Just $ wheelUp world
-  EventKey (MouseButton WheelDown ) _    _ _ -> Just $ wheelDown world
-  EventKey (MouseButton LeftButton) Down _ _ -> Just $ leftClick world
+      EventKey (MouseButton WheelUp   ) _    _ _ -> wheelUp
+      EventKey (MouseButton WheelDown ) _    _ _ -> wheelDown
+      EventKey (MouseButton LeftButton) Down _ _ -> leftClick
 
-  EventKey (Char '0'              ) Down _ _ -> Just $ clearPlacingSquare world
-  EventKey (Char  c               ) Down _ _ -> if c `elem` "12345678"
-                                                then Just $ digitPress (digitToInt c) world
-                                                else Nothing
+      EventKey (Char '0'              ) Down _ _ -> clearPlacingSquare
+      EventKey (Char  c               ) Down _ _ -> if c `elem` "12345678"
+                                                    then digitPress (digitToInt c)
+                                                    else return False
 
-  otherwise                                  -> Nothing
+      otherwise                                  -> return False
 
 
 step :: Float -> World -> World

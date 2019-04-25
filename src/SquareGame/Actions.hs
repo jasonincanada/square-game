@@ -17,19 +17,31 @@ import           SquareGame.Render (windowToCell, windowToSquareEdge)
 import           SquareGame.World
 
 
+-- A world action can modify the world and trigger a re-render by returning True
+type WorldAction = State World Bool
+
+
 -- User typed 0 so clear the placing square
-clearPlacingSquare :: World -> World
-clearPlacingSquare = set placing Nothing
+clearPlacingSquare :: WorldAction
+clearPlacingSquare = do
+  modify $ set placing Nothing
+  return True
+
 
 -- User typed 1,2,..8, so set the size of placing square to it
-digitPress :: Int -> World -> World
-digitPress size = set placing (Just size)
+digitPress :: Int -> WorldAction
+digitPress size = do
+  modify $ set placing (Just size)
+  return True
 
 
 -- User clicked, so show the cells we've already determined can be deshrouded (during mouseover),
 -- then do to the three types of auto-revealing until there are no further changes to do
-leftClick :: World -> World
-leftClick = execState click
+leftClick :: WorldAction
+leftClick = do
+  modify $ execState click
+  return True
+
   where
     click :: State World ()
     click = do
@@ -109,13 +121,20 @@ leftClick = execState click
       modify $ deshroudCells swept
 
 
-mouseMove :: (Float, Float) -> World -> World
-mouseMove (x, y) world = world & message      .~ show (world ^. placing)
-                               & cellHover    .~ windowToCell x y
-                               & cellsToClick .~ clickables world x y
+mouseMove :: (Float, Float) -> WorldAction
+mouseMove (x, y) = do
+  placing <- gets $ view placing
+  world   <- get
 
-clickables :: World -> Float -> Float -> CellSet
-clickables world x y = cells
+  modify $ set message      (show placing)
+  modify $ set cellHover    (windowToCell x y)
+  modify $ set cellsToClick (clickables x y world)
+
+  return True
+
+
+clickables :: Float -> Float -> World -> CellSet
+clickables x y world = cells
   where
     squares' = world ^. board ^. squares
     cells = case windowToSquareEdge world x y of
@@ -135,14 +154,23 @@ clickables world x y = cells
         shrouded  = foldr S.union S.empty (M.elems $ M.map fst squares')
 
 
-wheelUp :: World -> World
-wheelUp world   = world & case world ^. placing of
-                            Nothing   -> placing .~ Just 2
-                            Just 8    -> id
-                            Just size -> placing .~ Just (size+1)
+wheelUp :: State World Bool
+wheelUp = wheel up
+  where
+    up :: Maybe Size -> Size
+    up Nothing     = 2
+    up (Just 8)    = 8
+    up (Just size) = size + 1
 
-wheelDown :: World -> World
-wheelDown world = world & case world ^. placing of
-                            Nothing   -> placing .~ Just 8
-                            Just 1    -> id
-                            Just size -> placing .~ Just (size-1)
+wheelDown :: State World Bool
+wheelDown = wheel down
+  where
+    down :: Maybe Size -> Size
+    down Nothing     = 8
+    down (Just 1)    = 1
+    down (Just size) = size - 1
+
+wheel :: (Maybe Size -> Size) -> State World Bool
+wheel f = do
+  modify $ over placing (Just . f)
+  return True
