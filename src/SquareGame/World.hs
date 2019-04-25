@@ -19,7 +19,9 @@ data World = World { _board     :: Board
                    , _renderCount :: Int
 
                    -- The size of the square we're placing, if any
-                   , _placing :: Maybe Size
+                   , _placing       :: Maybe Size
+                   , _squareToPlace :: Maybe Square
+                   , _placed        :: [Square]
                    }
 
 makeLenses ''World

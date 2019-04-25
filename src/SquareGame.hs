@@ -17,10 +17,12 @@ import           Helpers (filteredKeys, randomIndices)
 
 {--- Types ---}
 
-type Square = (SRow, SCol, Size)
-type SRow   = Int
-type SCol   = Int
-type Size   = Int
+type Square  = (SRow, SCol, Size)
+type SRow    = Int
+type SCol    = Int
+type Size    = Int
+type Tile    = (SRow, SCol)
+type TileSet = S.Set Tile
 
 data SquareSide = STop | SRight | SBottom | SLeft
                   deriving (Eq, Ord, Show)
@@ -92,6 +94,11 @@ click (row, col, size) = \case
     s2   = size * 2
     int  = s2 - 2
 
+
+-- Map a square to its tiles
+tiles :: Square -> TileSet
+tiles (row, col, size) = S.fromList [ (row+r, col+c) | r <- [0..size-1],
+                                                       c <- [0..size-1]]
 
 -- Map a square to its interior cells
 cells :: Square -> [(Cell, CellBorder)]

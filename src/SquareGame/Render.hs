@@ -29,36 +29,32 @@ render world = picture
   where
     Board squares grid = world ^. board
 
-    picture      = if placeableSquare == Nothing
+    picture      = if world ^. squareToPlace == Nothing
                    then mconcat $ map renderFull full
                                ++ map renderShroud shroud
                                ++ map renderUnshroud unshrouded
                                ++ cellHoveredOver
                                ++ deshroudableCells
+                               ++ map renderPlaced (world ^. placed)
                                ++ msg
                    else mconcat $ map renderFull full
                                ++ map renderShroud shroud
                                ++ map renderUnshroud unshrouded
                                ++ cellHoveredOver
                                ++ placingSquare
+                               ++ map renderPlaced (world ^. placed)
                                ++ msg
 
     full         = fullSquares squares
 
 
+    renderPlaced :: Square -> Picture
+    renderPlaced square = mconcat [Color green $ renderFull square]
+
     placingSquare :: [Picture]
-    placingSquare = case placeableSquare of
+    placingSquare = case world ^. squareToPlace of
                       Nothing     -> mempty
                       Just square -> [Color yellow $ renderFull square]
-
-    placeableSquare :: Maybe Square
-    placeableSquare = do
-      size         <- world ^. placing
-      (crow, ccol) <- world ^. cellHover
-
-      return $ let row = crow `div` 2 - size `div` 2
-                   col = ccol `div` 2 - size `div` 2
-               in  clampSquare (row, col, size)
 
 
     deshroudableCells :: [Picture]

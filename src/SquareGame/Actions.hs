@@ -35,16 +35,44 @@ digitPress size = do
   return True
 
 
--- User clicked, so show the cells we've already determined can be deshrouded (during mouseover),
--- then do to the three types of auto-revealing until there are no further changes to do
 leftClick :: WorldAction
 leftClick = do
-  modify $ execState click
-  return True
+  square <- gets $ view squareToPlace
+
+  if square /= Nothing
+    then modify (execState place ) >> return True
+    else modify (execState reveal) >> return True
 
   where
-    click :: State World ()
-    click = do
+
+    {- Place mode - place a square if it doesn't overlap with any already-revealed or placed square -}
+    place :: State World ()
+    place = do
+      Just square <- gets $ view squareToPlace
+      overlapping <- any (overlaps square) <$> alreadyCovered
+
+      if overlapping
+        then modify $ set message $ "Can't place square at " ++ show square
+        else modify $ over placed (square:)
+
+      where
+        alreadyCovered :: State World [Square]
+        alreadyCovered = do
+          squares <- gets $ view (board . squares)
+          placed  <- gets $ view placed
+
+          return $ placed ++ (  M.keys
+                              $ M.filter (\cellsets -> S.empty == fst cellsets) squares)
+
+        overlaps :: Square -> Square -> Bool
+        overlaps s1 s2 = S.empty /= intersection
+          where
+            intersection = tiles s1 `S.intersection` tiles s2
+
+
+    {- Reveal mode - reveal cells on the other side of the clicked edge -}
+    reveal :: State World ()
+    reveal = do
       clicked <- gets $ view cellsToClick
 
       modify $ over board $ deshroudCells clicked
@@ -123,14 +151,23 @@ leftClick = do
 
 mouseMove :: (Float, Float) -> WorldAction
 mouseMove (x, y) = do
-  placing <- gets $ show . view placing
   toClick <- gets $ clickables x y
+  size    <- gets $ view placing
 
-  modify $ set message      placing
-  modify $ set cellHover  $ windowToCell x y
-  modify $ set cellsToClick toClick
+  let cell = windowToCell x y   :: Maybe Cell
+
+  modify $ set cellHover     cell
+  modify $ set cellsToClick  toClick
+  modify $ set squareToPlace (clampedSquare <$> size <*> cell)
 
   return True
+
+  where
+    clampedSquare :: Size -> Cell -> Square
+    clampedSquare size (crow, ccol) =
+      let row = crow `div` 2 - size `div` 2
+          col = ccol `div` 2 - size `div` 2
+      in  clampSquare (row, col, size)
 
 
 clickables :: Float -> Float -> World -> CellSet

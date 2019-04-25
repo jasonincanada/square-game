@@ -30,6 +30,8 @@ main = do
                   Blank
                   0
                   Nothing
+                  Nothing
+                  []
 
   let withCache = world & rendered .~ render world
 
