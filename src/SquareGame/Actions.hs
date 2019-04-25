@@ -123,12 +123,12 @@ leftClick = do
 
 mouseMove :: (Float, Float) -> WorldAction
 mouseMove (x, y) = do
-  placing <- gets $ view placing
-  world   <- get
+  placing <- gets $ show . view placing
+  toClick <- gets $ clickables x y
 
-  modify $ set message      (show placing)
-  modify $ set cellHover    (windowToCell x y)
-  modify $ set cellsToClick (clickables x y world)
+  modify $ set message      placing
+  modify $ set cellHover  $ windowToCell x y
+  modify $ set cellsToClick toClick
 
   return True
 
