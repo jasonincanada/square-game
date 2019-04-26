@@ -4,6 +4,7 @@ module SquareGame.Render (
 
 import qualified Data.Map as M
 import qualified Data.Set as S
+import           Data.Maybe       (isJust)
 import           Data.Semigroup   ((<>))
 import           Control.Lens
 import           Graphics.Gloss
@@ -17,22 +18,16 @@ render world = picture
   where
     Board squares grid = world ^. board
 
-    picture      = if world ^. squareToPlace == Nothing
-                   then mconcat $ map renderFull full
+    picture      = mconcat $ map renderFull full
                                ++ map renderShroud shroud
                                ++ map renderUnshroud unshrouded
                                ++ cellHoveredOver
-                               ++ deshroudableCells
                                ++ map renderPlaced (world ^. placed)
                                ++ pickup (world ^. squareToPickup)
                                ++ msg
-                   else mconcat $ map renderFull full
-                               ++ map renderShroud shroud
-                               ++ map renderUnshroud unshrouded
-                               ++ cellHoveredOver
-                               ++ placingSquare
-                               ++ map renderPlaced (world ^. placed)
-                               ++ msg
+                               ++ if isJust (world ^. squareToPlace)
+                                    then placingSquare
+                                    else deshroudableCells
 
     full         = fullSquares squares
 
