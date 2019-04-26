@@ -8,7 +8,7 @@ import           Data.Semigroup   ((<>))
 import           Control.Lens
 import           Graphics.Gloss
 import           SquareGame
-import           SquareGame.UI    (cellBorderPath, shiftX, shiftY, squareBorderPath, squareDigit)
+import           SquareGame.UI    (cellBorderPath, squareBorderPath, squareDigit)
 import           SquareGame.World
 
 colors :: M.Map Size Color
