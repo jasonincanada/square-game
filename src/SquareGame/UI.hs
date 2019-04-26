@@ -1,8 +1,6 @@
 module SquareGame.UI (
     cellBorderPath
   , clickables
-  , shiftX
-  , shiftY
   , squareBorderPath
   , squareDigit
   , windowToCell
