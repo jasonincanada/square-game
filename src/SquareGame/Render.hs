@@ -4,7 +4,6 @@ module SquareGame.Render (
 
 import qualified Data.Map as M
 import qualified Data.Set as S
-import           Data.Maybe       (fromJust, isJust)
 import           Data.Semigroup   ((<>))
 import           Control.Lens
 import           Graphics.Gloss
@@ -33,38 +32,20 @@ render world = picture
   where
     Board squares grid = world ^. board
 
-    picture      = mconcat $ map renderFull full
-                               ++ map renderShroud shroud
-                               ++ map renderUnshroud unshrouded
-                               ++ map renderPlaced (world ^. placed)
-                               ++ if isJust (world ^. squareToPlace)
-                                    then renderPlacingSquare (fromJust $ world ^. squareToPlace)
-                                    else deshroudableCells
-                               ++ pickup (world ^. squareToPickup)
-                               ++ cellHoveredOver
-                               ++ msg
+    picture = (mconcat $ map renderFull     (fullSquares squares)
+                      ++ map renderShroud   shroud
+                      ++ map renderUnshroud unshrouded
+                      ++ map renderPlaced   (world ^. placed))
 
+                      <> maybeRender deshroudableCells   (world ^. cellsToClick)
+                      <> maybeRender renderPlacingSquare (world ^. squareToPlace)
+                      <> maybeRender pickup              (world ^. squareToPickup)
+                      <> maybeRender cellHoveredOver     (world ^. cellHover)
+                      <> boardMessage
 
-    full         = fullSquares squares
-
-    pickup :: Maybe Square -> [Picture]
-    pickup Nothing       = [Blank]
-    pickup (Just square) = [Color blue $ renderFull square]
-
-
-    deshroudableCells :: [Picture]
-    deshroudableCells = case world ^. cellsToClick of
-                          Nothing    -> [Blank]
-                          Just cells -> map (Color green . renderShroud) (S.toList cells)
-
-    cellHoveredOver :: [Picture]
-    cellHoveredOver = case world ^. cellHover of
-      Nothing   -> [Blank]
-      Just cell -> [ Color red $ Polygon (cellWholeBorderPath cell) ]
-
-    cellWholeBorderPath :: Cell -> Path
-    cellWholeBorderPath cell =  cellBorderPath cell CTopLeft
-                             ++ cellBorderPath cell CBottomRight
+    maybeRender :: (a -> Picture) -> Maybe a -> Picture
+    maybeRender _      Nothing  = Blank
+    maybeRender render (Just a) = render a
 
 
     -- Render a fully-unshrouded square
@@ -80,6 +61,13 @@ render world = picture
                    $ Color black
                    $ Scale 0.2 0.2
                    $ Text (show $ size square)
+
+
+    renderShroud :: Cell -> Picture
+    renderShroud cell = Polygon (cellWholeBorderPath cell)
+
+    renderUnshroud :: (Cell, CellBorder) -> Picture
+    renderUnshroud (cell, border) = Line (cellBorderPath cell border)
 
 
     -- Render a placed square, darkening the color of the shrouded cells (which become points for
@@ -105,8 +93,8 @@ render world = picture
                          $ Text (show $ size square)
 
 
-    renderPlacingSquare :: Square -> [Picture]
-    renderPlacingSquare square = [ fill <> digit ]
+    renderPlacingSquare :: Square -> Picture
+    renderPlacingSquare square = fill <> digit
       where
         fill   = Color (fade $ fade color) $ Polygon path
         path   = squareBorderPath square
@@ -118,23 +106,29 @@ render world = picture
                    $ Text (show $ size square)
 
 
-    renderShroud :: Cell -> Picture
-    renderShroud cell = Polygon (cellWholeBorderPath cell)
+    deshroudableCells :: CellSet -> Picture
+    deshroudableCells cells = mconcat $ map (Color green . renderShroud) (S.toList cells)
 
-    renderUnshroud :: (Cell, CellBorder) -> Picture
-    renderUnshroud (cell, border) = Line (cellBorderPath cell border)
+    pickup :: Square -> Picture
+    pickup square = Color blue $ renderFull square
+
+    cellHoveredOver :: Cell -> Picture
+    cellHoveredOver cell = Color red $ Polygon (cellWholeBorderPath cell)
+
+    cellWholeBorderPath :: Cell -> Path
+    cellWholeBorderPath cell =  cellBorderPath cell CTopLeft
+                             ++ cellBorderPath cell CBottomRight
 
 
-    msg :: [Picture]
-    msg = [ Translate (-350) 380
-              $ Scale 0.2 0.2
-              $ Text
-              $ show (world ^. renderCount) ++ ", " ++ (world ^. message) ]
+    boardMessage :: Picture
+    boardMessage = Translate (-350) 380
+                     $ Scale 0.2 0.2
+                     $ Text
+                     $ show (world ^. renderCount) ++ ", " ++ (world ^. message)
 
-    shroud       = concatMap (S.toList . fst) (M.elems squares)
+    shroud       = S.toList shroudset
     shroudset    = foldr (S.union . fst) S.empty (M.elems squares)
     unshroud     = concatMap (S.toList . snd) (M.elems squares)
-
     unshrouded   = map (\cell -> (cell, snd $ grid M.! cell)) unshroud
 
 
