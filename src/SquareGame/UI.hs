@@ -75,7 +75,7 @@ squareDigit :: Square -> (Float, Float)
 squareDigit = squareCenter >>> bimap slide slide
   where
     slide      = subtract (digitWidth / 2)
-    digitWidth = 20
+    digitWidth = 16
 
 squareCenter :: Square -> (Float, Float)
 squareCenter (row, col, size) = (x, y)

@@ -59,7 +59,7 @@ render world = picture
 
         digit  = translateToDigit square
                    $ Color black
-                   $ Scale 0.2 0.2
+                   $ Scale 0.15 0.15
                    $ Text (show $ size square)
 
 
