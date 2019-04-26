@@ -32,16 +32,16 @@ render world = picture
   where
     Board squares grid = world ^. board
 
-    picture = (mconcat $ map renderFull     (fullSquares squares)
-                      ++ map renderShroud   shroud
-                      ++ map renderUnshroud unshrouded
-                      ++ map renderPlaced   (world ^. placed))
+    picture = mconcat (map renderFull     (fullSquares squares)
+                    ++ map renderShroud   shroud
+                    ++ map renderUnshroud unshrouded
+                    ++ map renderPlaced   (world ^. placed))
 
-                      <> maybeRender deshroudableCells   (world ^. cellsToClick)
-                      <> maybeRender renderPlacingSquare (world ^. squareToPlace)
-                      <> maybeRender pickup              (world ^. squareToPickup)
-                      <> maybeRender cellHoveredOver     (world ^. cellHover)
-                      <> boardMessage
+                    <> maybeRender deshroudableCells   (world ^. cellsToClick)
+                    <> maybeRender renderPlacingSquare (world ^. squareToPlace)
+                    <> maybeRender pickup              (world ^. squareToPickup)
+                    <> maybeRender cellHoveredOver     (world ^. cellHover)
+                    <> boardMessage
 
     maybeRender :: (a -> Picture) -> Maybe a -> Picture
     maybeRender _      Nothing  = Blank
