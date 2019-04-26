@@ -192,6 +192,15 @@ main = hspec $ do
     it "clamps to the bottom/right"  $ clampSquare (32+1, 32+1, 4) `shouldBe` (32, 32, 4)
 
 
+  describe "countPlaceables" $ do
+    let placed = [1,2,3,3,8]
+
+    it "counts squares left" $
+      countPlaceables placed `shouldBe` M.fromList [(1,0), (2,1), (3,1), (4,4),
+                                                    (5,5), (6,6), (7,7), (8, 7)]
+
+
+
   {- src/Helpers.hs -}
   context "Helpers" $ do
 

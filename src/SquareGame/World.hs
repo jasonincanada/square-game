@@ -26,6 +26,9 @@ data World = World { _board     :: Board
                    , _squareToPlace :: Maybe Square
                    , _placed        :: [Square]
 
+                   -- The number of placeable squares left of each size
+                   , _placeables    :: M.Map Size Int
+
                    -- Which placed square the cursor is over
                    , _squareToPickup :: Maybe Square
 
@@ -47,5 +50,6 @@ makeWorld board = World board
                         Nothing
                         Nothing
                         []
+                        M.empty
                         Nothing
                         M.empty

@@ -62,6 +62,9 @@ data Board   = Board { -- Map a square to its shrouded and unshrouded grid cells
 
 makeLenses ''Board
 
+size :: Square -> Size
+size (_, _, s) = s
+
 
 {--- Square<->Cell maps ---}
 
@@ -252,6 +255,15 @@ sweepableEight square (_, unshrouded) edge = unveilable
 fullSquares :: M.Map Square (CellSet, CellSet) -> [Square]
 fullSquares = M.filter ((==S.empty) . fst)
               >>> M.keys
+
+
+-- Count number of squares we have left to place given what's already placed or revealed
+countPlaceables :: [Size] -> M.Map Size Int
+countPlaceables sizes = M.unionWith subtract placed full
+  where
+    full   = M.fromList         [ (i, i) | i <- [1..8] ]
+    placed = M.fromListWith (+) [ (i, 1) | i <- sizes  ]
+
 
 
 type Seed = Int

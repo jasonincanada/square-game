@@ -53,6 +53,24 @@ leftClick = do
      | otherwise      -> return False
 
 
+-- Count the number of available squares of each size for rendering in the tray
+recount :: State World ()
+recount = do
+  usedSizes <- map size <$> alreadyCovered
+
+  modify $ set placeables (countPlaceables usedSizes)
+
+  return ()
+
+
+alreadyCovered :: State World [Square]
+alreadyCovered = do
+  squares <- gets $ view (board . squares)
+  placed  <- gets $ view placed
+
+  return $ placed ++ (  M.keys
+                      $ M.filter (\cellsets -> S.empty == fst cellsets) squares)
+
 {- Place mode - place a square if it doesn't overlap with any already-revealed or placed square -}
 place :: WorldAction
 place = do
@@ -60,20 +78,16 @@ place = do
   overlapping <- any (square `overlaps`) <$> alreadyCovered
 
   if overlapping
-    then modify $ set message $ "Can't place square at " ++ show square
-    else modify $ over placed (square:)
+    then
+      modify $ set message $ "Can't place square at " ++ show square
+
+    else do
+      modify $ over placed (square:)
+      recount
 
   return True
 
   where
-    alreadyCovered :: State World [Square]
-    alreadyCovered = do
-      squares <- gets $ view (board . squares)
-      placed  <- gets $ view placed
-
-      return $ placed ++ (  M.keys
-                          $ M.filter (\cellsets -> S.empty == fst cellsets) squares)
-
     overlaps :: Square -> Square -> Bool
     overlaps s1 s2 = S.empty /= intersection
       where
@@ -89,6 +103,9 @@ pickUp = do
   modify $ set placing       (Just size)
   modify $ set squareToPlace (Just square)
   modify $ over placed       (delete square)
+
+  recount
+
   return True
 
 
