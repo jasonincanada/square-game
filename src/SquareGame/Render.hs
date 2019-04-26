@@ -175,10 +175,10 @@ windowToCell x y
     col = floor $ (x - shiftX) / boardscale
 
 
-windowToSquareEdge :: World -> Float -> Float -> Maybe (Square, SquareSide)
-windowToSquareEdge world x y = do
+windowToSquareEdge :: CellGrid -> Float -> Float -> Maybe (Square, SquareSide)
+windowToSquareEdge grid x y = do
   cell <- windowToCell x y
-  let square = fst $ (world ^. board ^. grid) M.! cell
+  let square = fst $ grid M.! cell
 
   let distancesToEdges = let top    = toWindowY square STop
                              bottom = toWindowY square SBottom

@@ -172,7 +172,7 @@ reveal = do
 
 mouseMove :: (Float, Float) -> WorldAction
 mouseMove (x, y) = do
-  toClick <- gets $ clickables x y
+  toClick <- gets $ clickables x y . view board
 
   let cell = windowToCell x y   :: Maybe Cell
 
@@ -229,25 +229,24 @@ setPickingSquare = do
                                               c = ccol `div` 2
 
 
-clickables :: Float -> Float -> World -> CellSet
-clickables x y world = cells
+clickables :: Float -> Float -> Board -> CellSet
+clickables x y (Board squares grid) = cells
   where
-    squares' = world ^. board ^. squares
-    cells = case windowToSquareEdge world x y of
+    cells = case windowToSquareEdge grid x y of
               Nothing             -> S.empty
               Just (square, edge) -> if fullyRevealed square
                                      then getFor square edge
                                      else S.empty
 
     fullyRevealed :: Square -> Bool
-    fullyRevealed square = S.empty == fst (squares' M.! square)
+    fullyRevealed square = S.empty == fst (squares M.! square)
 
     getFor :: Square -> SquareSide -> CellSet
     getFor square edge = intersect
       where
         intersect = S.intersection all shrouded
         all       = click square edge
-        shrouded  = foldr S.union S.empty (M.elems $ M.map fst squares')
+        shrouded  = foldr S.union S.empty (M.elems $ M.map fst squares)
 
 
 wheelUp :: WorldAction
