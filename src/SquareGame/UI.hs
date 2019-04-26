@@ -1,8 +1,9 @@
 module SquareGame.UI (
-    boardToWindow
+    cellBorderPath
   , clickables
   , shiftX
   , shiftY
+  , squareBorderPath
   , squareDigit
   , windowToCell
   , windowWidth
@@ -104,3 +105,43 @@ clickables x y (Board squares grid) = cells
         intersect = S.intersection all shrouded
         all       = click square edge
         shrouded  = foldr S.union S.empty (M.elems $ M.map fst squares)
+
+
+type Path = [(Float, Float)]
+
+squareBorderPath :: Square -> Path
+squareBorderPath (r, c, s) =
+  [ boardToWindow  row        col
+  , boardToWindow (row+size)  col
+  , boardToWindow (row+size) (col+size)
+  , boardToWindow  row       (col+size)
+  , boardToWindow  row        col ]
+  where
+    row  = 2*r
+    col  = 2*c
+    size = 2*s
+
+
+cellBorderPath :: Cell -> CellBorder -> Path
+cellBorderPath (row, col) border = case border of
+  CTopLeft     -> [ boardToWindow (row+1)  col
+                  , boardToWindow  row     col
+                  , boardToWindow  row    (col+1) ]
+  CTop         -> [ boardToWindow  row     col
+                  , boardToWindow  row    (col+1) ]
+  CTopRight    -> [ boardToWindow  row     col
+                  , boardToWindow  row    (col+1)
+                  , boardToWindow (row+1) (col+1) ]
+  CRight       -> [ boardToWindow  row    (col+1)
+                  , boardToWindow (row+1) (col+1) ]
+  CBottomRight -> [ boardToWindow  row    (col+1)
+                  , boardToWindow (row+1) (col+1)
+                  , boardToWindow (row+1)  col    ]
+  CBottom      -> [ boardToWindow (row+1)  col
+                  , boardToWindow (row+1) (col+1) ]
+  CBottomLeft  -> [ boardToWindow  row     col
+                  , boardToWindow (row+1)  col
+                  , boardToWindow (row+1) (col+1) ]
+  CLeft        -> [ boardToWindow  row     col
+                  , boardToWindow (row+1)  col    ]
+  CNone        -> []

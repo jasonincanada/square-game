@@ -9,7 +9,7 @@ import           Data.Semigroup   ((<>))
 import           Control.Lens
 import           Graphics.Gloss
 import           SquareGame
-import           SquareGame.UI    (boardToWindow, shiftX, shiftY, squareDigit)
+import           SquareGame.UI    (cellBorderPath, shiftX, shiftY, squareBorderPath, squareDigit)
 import           SquareGame.World
 
 
@@ -28,6 +28,7 @@ render world = picture
                                ++ if isJust (world ^. squareToPlace)
                                     then placingSquare
                                     else deshroudableCells
+
 
     full         = fullSquares squares
 
@@ -51,64 +52,29 @@ render world = picture
 
     cellHoveredOver :: [Picture]
     cellHoveredOver = case world ^. cellHover of
-      Nothing     -> [Blank]
-      Just (r, c) -> [ Color red $ Polygon [ boardToWindow r     c
-                                           , boardToWindow (r+1) c
-                                           , boardToWindow (r+1) (c+1)
-                                           , boardToWindow r     (c+1)
-                                           , boardToWindow r     c
-                                           ] ]
+      Nothing   -> [Blank]
+      Just cell -> [ Color red $ Polygon (cellWholeBorderPath cell) ]
+
+    cellWholeBorderPath :: Cell -> Path
+    cellWholeBorderPath cell =  cellBorderPath cell CTopLeft
+                             ++ cellBorderPath cell CBottomRight
+
 
     -- Render a fully-unshrouded square
     renderFull :: Square -> Picture
-    renderFull square@(row, col, size) = line <> digit
+    renderFull square = line <> digit
       where
-        line  = Line [ boardToWindow r     c
-                     , boardToWindow (r+s) c
-                     , boardToWindow (r+s) (c+s)
-                     , boardToWindow r     (c+s)
-                     , boardToWindow r     c ]
+        line  = Line (squareBorderPath square)
 
         digit = translateToDigit square
                   $ Scale 0.2 0.2
-                  $ Text (show size)
-
-        r = 2*row
-        c = 2*col
-        s = 2*size
+                  $ Text (show $ size square)
 
     renderShroud :: Cell -> Picture
-    renderShroud (row, col) =
-      Polygon [ boardToWindow row     col
-              , boardToWindow row     (col+1)
-              , boardToWindow (row+1) (col+1)
-              , boardToWindow (row+1) col
-              , boardToWindow row     col
-              ]
+    renderShroud cell = Polygon (cellWholeBorderPath cell)
 
     renderUnshroud :: (Cell, CellBorder) -> Picture
-    renderUnshroud ((row, col), border) = case border of
-      CTopLeft     -> Line [ boardToWindow  row    (col+1)
-                           , boardToWindow  row     col
-                           , boardToWindow (row+1)  col    ]
-      CTop         -> Line [ boardToWindow  row     col
-                           , boardToWindow  row    (col+1) ]
-      CTopRight    -> Line [ boardToWindow  row     col
-                           , boardToWindow  row    (col+1)
-                           , boardToWindow (row+1) (col+1) ]
-      CRight       -> Line [ boardToWindow  row    (col+1)
-                           , boardToWindow (row+1) (col+1) ]
-      CBottomRight -> Line [ boardToWindow  row    (col+1)
-                           , boardToWindow (row+1) (col+1)
-                           , boardToWindow (row+1)  col    ]
-      CBottom      -> Line [ boardToWindow (row+1)  col
-                           , boardToWindow (row+1) (col+1) ]
-      CBottomLeft  -> Line [ boardToWindow  row     col
-                           , boardToWindow (row+1)  col
-                           , boardToWindow (row+1) (col+1) ]
-      CLeft        -> Line [ boardToWindow  row     col
-                           , boardToWindow (row+1)  col    ]
-      CNone        -> Blank
+    renderUnshroud (cell, border) = Line (cellBorderPath cell border)
 
 
     msg :: [Picture]
