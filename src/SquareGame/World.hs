@@ -22,6 +22,9 @@ data World = World { _board     :: Board
                    , _placing       :: Maybe Size
                    , _squareToPlace :: Maybe Square
                    , _placed        :: [Square]
+
+                   -- Which placed square the cursor is over
+                   , _squareToPickup :: Maybe Square
                    }
 
 makeLenses ''World

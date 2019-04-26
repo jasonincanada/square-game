@@ -159,6 +159,7 @@ mouseMove (x, y) = do
   modify $ set cellsToClick  toClick
 
   setPlacingSquare
+  setPickingSquare
 
   return True
 
@@ -178,6 +179,33 @@ setPlacingSquare = do
       let row = crow `div` 2 - size `div` 2
           col = ccol `div` 2 - size `div` 2
       in  clampSquare (row, col, size)
+
+
+-- Remember the last placed square we moused over
+setPickingSquare :: WorldAction
+setPickingSquare = do
+  cell   <- gets $ view cellHover
+  placed <- gets $ view placed
+
+  let square = join (find <$> cell <*> Just placed)
+
+  modify $ set squareToPickup square
+
+  return True
+
+  where
+    find :: Cell -> [Square] -> Maybe Square
+    find _ [] = Nothing
+    find cell (square : rest)
+      | cell `isIn` square = Just square
+      | otherwise          = find cell rest
+
+    isIn :: Cell -> Square -> Bool
+    isIn (crow,ccol) (srow,scol,size) =    r >= srow && r < (srow+size)
+                                        && c >= scol && c < (scol+size)
+
+                                        where r = crow `div` 2
+                                              c = ccol `div` 2
 
 
 clickables :: Float -> Float -> World -> CellSet
