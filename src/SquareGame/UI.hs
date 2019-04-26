@@ -5,7 +5,6 @@ module SquareGame.UI (
   , shiftX
   , shiftY
   , windowToCell
-  , windowToSquareEdge
   , windowWidth
   , windowHeight
   ) where
