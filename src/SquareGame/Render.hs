@@ -36,6 +36,7 @@ render world = picture
                                ++ cellHoveredOver
                                ++ deshroudableCells
                                ++ map renderPlaced (world ^. placed)
+                               ++ pickup (world ^. squareToPickup)
                                ++ msg
                    else mconcat $ map renderFull full
                                ++ map renderShroud shroud
@@ -47,6 +48,9 @@ render world = picture
 
     full         = fullSquares squares
 
+    pickup :: Maybe Square -> [Picture]
+    pickup Nothing       = [Blank]
+    pickup (Just square) = [Color blue $ renderFull square]
 
     renderPlaced :: Square -> Picture
     renderPlaced square = mconcat [Color green $ renderFull square]
