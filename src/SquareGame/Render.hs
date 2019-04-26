@@ -8,7 +8,7 @@ import           Data.Semigroup   ((<>))
 import           Control.Lens
 import           Graphics.Gloss
 import           SquareGame
-import           SquareGame.UI    (boardToWindow, shiftX, shiftY, squareCenter)
+import           SquareGame.UI    (boardToWindow, shiftX, shiftY, squareDigit)
 import           SquareGame.World
 
 
@@ -72,7 +72,7 @@ render world = picture
                      , boardToWindow r     (c+s)
                      , boardToWindow r     c ]
 
-        digit = translateToSquareCenter square
+        digit = translateToDigit square
                   $ Scale 0.2 0.2
                   $ Text (show size)
 
@@ -126,7 +126,7 @@ render world = picture
     unshrouded   = map (\cell -> (cell, snd $ grid M.! cell)) unshroud
 
 
-translateToSquareCenter :: Square -> Picture -> Picture
-translateToSquareCenter square = Translate x y
+translateToDigit :: Square -> Picture -> Picture
+translateToDigit square = Translate x y
   where
-    (x, y) = squareCenter square
+    (x, y) = squareDigit square

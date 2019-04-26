@@ -3,7 +3,7 @@ module SquareGame.UI (
   , clickables
   , shiftX
   , shiftY
-  , squareCenter
+  , squareDigit
   , windowToCell
   , windowWidth
   , windowHeight
@@ -11,7 +11,9 @@ module SquareGame.UI (
 
 import qualified Data.Map as M
 import qualified Data.Set as S
-import           Helpers (minBy)
+import           Control.Arrow  ((>>>))
+import           Data.Bifunctor (bimap)
+import           Helpers        (minBy)
 import           SquareGame
 
 {- UI globals -}
@@ -67,11 +69,18 @@ toWindowX (_, col, _   ) SLeft   = fromIntegral  col          * 2 * boardScale +
 toWindowX (_, col, size) SRight  = fromIntegral (col+size   ) * 2 * boardScale + shiftX
 
 
+-- Return the (x,y) where the digit for this square should be drawn
+squareDigit :: Square -> (Float, Float)
+squareDigit = squareCenter >>> bimap slide slide
+  where
+    slide      = subtract (digitWidth / 2)
+    digitWidth = 20
+
 squareCenter :: Square -> (Float, Float)
 squareCenter (row, col, size) = (x, y)
   where
-    x = boardScale * (2*  c  + s) + shiftX - 10
-    y = boardScale * (2*(-r) - s) + shiftY - 10
+    x = boardScale * (2*  c  + s) + shiftX
+    y = boardScale * (2*(-r) - s) + shiftY
     c = fromIntegral col
     r = fromIntegral row
     s = fromIntegral size
