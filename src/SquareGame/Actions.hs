@@ -9,9 +9,10 @@ module SquareGame.Actions (
 
 import qualified Data.Map as M
 import qualified Data.Set as S
-import           Control.Arrow ((>>>))
+import           Control.Arrow     ((>>>))
 import           Control.Lens
 import           Control.Monad.State
+import           Data.List         (delete)
 import           SquareGame
 import           SquareGame.Render (windowToCell, windowToSquareEdge)
 import           SquareGame.World
@@ -37,11 +38,14 @@ digitPress size = do
 
 leftClick :: WorldAction
 leftClick = do
-  square <- gets $ view squareToPlace
+  placing <- gets $ view squareToPlace
+  picking <- gets $ view squareToPickup
 
-  if square /= Nothing
+  if placing /= Nothing
     then place
-    else reveal
+    else if picking /= Nothing
+           then pickUp
+           else reveal
 
 
 {- Place mode - place a square if it doesn't overlap with any already-revealed or placed square -}
@@ -69,6 +73,18 @@ place = do
     overlaps s1 s2 = S.empty /= intersection
       where
         intersection = tiles s1 `S.intersection` tiles s2
+
+
+pickUp :: WorldAction
+pickUp = do
+  Just square <- gets $ view squareToPickup
+
+  let (_, _, size) = square
+
+  modify $ set placing       (Just size)
+  modify $ set squareToPlace (Just square)
+  modify $ over placed       (delete square)
+  return True
 
 
 {- Reveal mode - reveal cells on the other side of the clicked edge -}
