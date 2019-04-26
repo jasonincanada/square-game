@@ -251,20 +251,20 @@ clickables x y world = cells
 wheelUp :: WorldAction
 wheelUp = wheel up >> setPlacingSquare
   where
-    up :: Maybe Size -> Size
-    up Nothing     = 2
-    up (Just 8)    = 8
-    up (Just size) = size + 1
+    up :: Maybe Size -> Maybe Size
+    up Nothing     = Just 2
+    up (Just 8)    = Just 8
+    up (Just size) = Just (size + 1)
 
 wheelDown :: WorldAction
 wheelDown = wheel down >> setPlacingSquare
   where
-    down :: Maybe Size -> Size
-    down Nothing     = 8
-    down (Just 1)    = 1
-    down (Just size) = size - 1
+    down :: Maybe Size -> Maybe Size
+    down Nothing     = Nothing
+    down (Just 1)    = Nothing
+    down (Just size) = Just (size - 1)
 
-wheel :: (Maybe Size -> Size) -> WorldAction
+wheel :: (Maybe Size -> Maybe Size) -> WorldAction
 wheel f = do
-  modify $ over placing (Just . f)
+  modify $ over placing f
   return True
