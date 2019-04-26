@@ -54,8 +54,8 @@ processEvent event world = runState state world
 
       EventMotion (x, y)                         -> mouseMove (x, y)
 
-      EventKey (MouseButton WheelUp   ) _    _ _ -> debounce 200 "wheelUp" wheelUp
-      EventKey (MouseButton WheelDown ) _    _ _ -> wheelDown
+      EventKey (MouseButton WheelUp   ) _    _ _ -> debounce 100 "wheelUp" wheelUp
+      EventKey (MouseButton WheelDown ) _    _ _ -> debounce 100 "wheelDown" wheelDown
       EventKey (MouseButton LeftButton) Down _ _ -> leftClick
 
       EventKey (Char '0'              ) Down _ _ -> clearPlacingSquare
