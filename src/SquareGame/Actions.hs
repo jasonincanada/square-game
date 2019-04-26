@@ -40,47 +40,50 @@ leftClick = do
   square <- gets $ view squareToPlace
 
   if square /= Nothing
-    then modify (execState place ) >> return True
-    else modify (execState reveal) >> return True
+    then place
+    else reveal
+
+
+{- Place mode - place a square if it doesn't overlap with any already-revealed or placed square -}
+place :: WorldAction
+place = do
+  Just square <- gets $ view squareToPlace
+  overlapping <- any (square `overlaps`) <$> alreadyCovered
+
+  if overlapping
+    then modify $ set message $ "Can't place square at " ++ show square
+    else modify $ over placed (square:)
+
+  return True
 
   where
+    alreadyCovered :: State World [Square]
+    alreadyCovered = do
+      squares <- gets $ view (board . squares)
+      placed  <- gets $ view placed
 
-    {- Place mode - place a square if it doesn't overlap with any already-revealed or placed square -}
-    place :: State World ()
-    place = do
-      Just square <- gets $ view squareToPlace
-      overlapping <- any (square `overlaps`) <$> alreadyCovered
+      return $ placed ++ (  M.keys
+                          $ M.filter (\cellsets -> S.empty == fst cellsets) squares)
 
-      if overlapping
-        then modify $ set message $ "Can't place square at " ++ show square
-        else modify $ over placed (square:)
-
+    overlaps :: Square -> Square -> Bool
+    overlaps s1 s2 = S.empty /= intersection
       where
-        alreadyCovered :: State World [Square]
-        alreadyCovered = do
-          squares <- gets $ view (board . squares)
-          placed  <- gets $ view placed
-
-          return $ placed ++ (  M.keys
-                              $ M.filter (\cellsets -> S.empty == fst cellsets) squares)
-
-        overlaps :: Square -> Square -> Bool
-        overlaps s1 s2 = S.empty /= intersection
-          where
-            intersection = tiles s1 `S.intersection` tiles s2
+        intersection = tiles s1 `S.intersection` tiles s2
 
 
-    {- Reveal mode - reveal cells on the other side of the clicked edge -}
-    reveal :: State World ()
-    reveal = do
-      clicked <- gets $ view cellsToClick
+{- Reveal mode - reveal cells on the other side of the clicked edge -}
+reveal :: WorldAction
+reveal = do
+  clicked <- gets $ view cellsToClick
 
-      modify $ over board $ deshroudCells clicked
-                            >>> execState (sweepBoard clicked)
+  modify $ over board $ deshroudCells clicked
+                        >>> execState (sweepBoard clicked)
 
-      modify $ set cellsToClick S.empty
+  modify $ set cellsToClick S.empty
 
+  return True
 
+  where
     sweepBoard :: CellSet -> State Board ()
     sweepBoard cells = do
       grid <- gets $ view grid
