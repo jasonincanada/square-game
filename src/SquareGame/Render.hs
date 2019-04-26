@@ -26,6 +26,8 @@ colors = M.fromList [ (8, makeColor 0.9 0.9 0.9 solid)
 fade :: Color -> Color
 fade = withAlpha 0.5
 
+digitScale   = 0.15
+messageScale = 0.20
 
 render :: World -> Picture
 render world = picture
@@ -59,7 +61,7 @@ render world = picture
 
         digit  = translateToDigit square
                    $ Color black
-                   $ Scale 0.15 0.15
+                   $ Scale digitScale digitScale
                    $ Text (show $ size square)
 
 
@@ -89,7 +91,7 @@ render world = picture
 
         digit        = translateToDigit square
                          $ Color black
-                         $ Scale 0.2 0.2
+                         $ Scale digitScale digitScale
                          $ Text (show $ size square)
 
 
@@ -102,7 +104,7 @@ render world = picture
 
         digit  = translateToDigit square
                    $ Color black
-                   $ Scale 0.2 0.2
+                   $ Scale digitScale digitScale
                    $ Text (show $ size square)
 
 
@@ -122,7 +124,7 @@ render world = picture
 
     boardMessage :: Picture
     boardMessage = Translate (-350) 380
-                     $ Scale 0.2 0.2
+                     $ Scale messageScale messageScale
                      $ Text
                      $ show (world ^. renderCount) ++ ", " ++ (world ^. message)
 
