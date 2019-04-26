@@ -50,7 +50,9 @@ render world = picture
 
 
     deshroudableCells :: [Picture]
-    deshroudableCells = map (Color green . renderShroud) (S.toList $ world ^. cellsToClick)
+    deshroudableCells = case world ^. cellsToClick of
+                          Nothing    -> [Blank]
+                          Just cells -> map (Color green . renderShroud) (S.toList cells)
 
     cellHoveredOver :: [Picture]
     cellHoveredOver = case world ^. cellHover of

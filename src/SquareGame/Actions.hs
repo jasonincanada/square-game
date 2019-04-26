@@ -42,12 +42,15 @@ leftClick :: WorldAction
 leftClick = do
   placing <- gets $ view squareToPlace
   picking <- gets $ view squareToPickup
+  cells   <- gets $ view cellsToClick
 
   if placing /= Nothing
     then place
     else if picking /= Nothing
            then pickUp
-           else reveal
+           else if cells /= Nothing
+                then reveal
+                else return False
 
 
 {- Place mode - place a square if it doesn't overlap with any already-revealed or placed square -}
@@ -92,12 +95,12 @@ pickUp = do
 {- Reveal mode - reveal cells on the other side of the clicked edge -}
 reveal :: WorldAction
 reveal = do
-  clicked <- gets $ view cellsToClick
+  Just clicked <- gets $ view cellsToClick
 
   modify $ over board $ deshroudCells clicked
                         >>> execState (sweepBoard clicked)
 
-  modify $ set cellsToClick S.empty
+  modify $ set cellsToClick Nothing
 
   return True
 

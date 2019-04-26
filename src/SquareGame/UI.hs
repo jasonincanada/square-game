@@ -86,14 +86,14 @@ squareCenter (row, col, size) = (x, y)
     s = fromIntegral size
 
 
-clickables :: Float -> Float -> Board -> CellSet
+clickables :: Float -> Float -> Board -> Maybe CellSet
 clickables x y (Board squares grid) = cells
   where
     cells = case windowToSquareEdge grid x y of
-              Nothing             -> S.empty
+              Nothing             -> Nothing
               Just (square, edge) -> if fullyRevealed square
-                                     then getFor square edge
-                                     else S.empty
+                                     then Just $ getFor square edge
+                                     else Nothing
 
     fullyRevealed :: Square -> Bool
     fullyRevealed square = S.empty == fst (squares M.! square)

@@ -3,7 +3,6 @@
 module SquareGame.World where
 
 import qualified Data.Map as M
-import qualified Data.Set as S
 import           Control.Lens
 import           Graphics.Gloss (Picture(Blank))
 import           SquareGame
@@ -16,7 +15,7 @@ data World = World { _board     :: Board
 
                    -- The set of shrouded Cells to highlight as a preview of what would be
                    -- revealed when the user clicks
-                   , _cellsToClick :: CellSet
+                   , _cellsToClick :: Maybe CellSet
 
                    -- Cache our last render of the board so we don't recompute redundantly every tick
                    , _rendered    :: Picture
@@ -42,7 +41,7 @@ makeWorld board = World board
                         0
                         0.0
                         Nothing
-                        S.empty
+                        Nothing
                         Blank
                         0
                         Nothing
