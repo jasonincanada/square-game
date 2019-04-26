@@ -152,12 +152,22 @@ leftClick = do
 mouseMove :: (Float, Float) -> WorldAction
 mouseMove (x, y) = do
   toClick <- gets $ clickables x y
-  size    <- gets $ view placing
 
   let cell = windowToCell x y   :: Maybe Cell
 
   modify $ set cellHover     cell
   modify $ set cellsToClick  toClick
+
+  setPlacingSquare
+
+  return True
+
+
+setPlacingSquare :: WorldAction
+setPlacingSquare = do
+  size <- gets $ view placing
+  cell <- gets $ view cellHover
+
   modify $ set squareToPlace (clampedSquare <$> size <*> cell)
 
   return True
@@ -192,7 +202,7 @@ clickables x y world = cells
 
 
 wheelUp :: WorldAction
-wheelUp = wheel up
+wheelUp = wheel up >> setPlacingSquare
   where
     up :: Maybe Size -> Size
     up Nothing     = 2
@@ -200,7 +210,7 @@ wheelUp = wheel up
     up (Just size) = size + 1
 
 wheelDown :: WorldAction
-wheelDown = wheel down
+wheelDown = wheel down >> setPlacingSquare
   where
     down :: Maybe Size -> Size
     down Nothing     = 8
