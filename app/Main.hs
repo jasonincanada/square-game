@@ -25,6 +25,7 @@ main = do
   let world   = World
                   started
                   "default message"
+                  0
                   Nothing
                   S.empty
                   Blank
@@ -78,4 +79,8 @@ processEvent event world = runState state world
 
 
 step :: Float -> World -> World
-step float = id
+step seconds world = case runState (advance seconds) world of
+                       (True, world') -> world' & rendered .~ render world'
+                                                & renderCount %~ (+1)
+
+                       (_   , world') -> world'

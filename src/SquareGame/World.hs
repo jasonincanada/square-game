@@ -8,6 +8,7 @@ import SquareGame
 
 data World = World { _board     :: Board
                    , _message   :: String
+                   , _steps     :: Int
                    , _cellHover :: Maybe Cell
 
                    -- The set of shrouded Cells to highlight as a preview of what would be

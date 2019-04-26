@@ -1,7 +1,8 @@
 module SquareGame.Actions (
-    leftClick
+    advance
   , clearPlacingSquare
   , digitPress
+  , leftClick
   , mouseMove
   , wheelUp
   , wheelDown
@@ -268,3 +269,9 @@ wheel :: (Maybe Size -> Maybe Size) -> WorldAction
 wheel f = do
   modify $ over placing f
   return True
+
+
+advance :: Float -> WorldAction
+advance seconds = do
+  modify $ over steps (+1)
+  return False
