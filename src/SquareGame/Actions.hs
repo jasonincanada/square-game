@@ -280,15 +280,15 @@ debounce delay event action = do
   if event `M.member` map
     then
       if time >= map M.! event
-        then nextAt time >> action
+        then nextFrom time >> action
         else return False
 
     else
-      nextAt time >> action
+      nextFrom time >> action
 
   where
-    nextAt :: Float -> WorldAction
-    nextAt time = do
+    nextFrom :: Float -> WorldAction
+    nextFrom time = do
       let earliestTime = time + (delay / 1000)
       modify $ over debounces (M.insert event earliestTime)
       return False
