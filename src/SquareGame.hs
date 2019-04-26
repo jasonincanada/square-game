@@ -1,5 +1,4 @@
 {-# Language LambdaCase      #-}
-{-# Language RecordWildCards #-}
 {-# Language TemplateHaskell #-}
 {-# Language TupleSections   #-}
 
@@ -195,10 +194,10 @@ makeBoard :: [Square] -> Board
 makeBoard = foldl add (Board M.empty M.empty)
   where
     add :: Board -> Square -> Board
-    add Board{..} square = Board squares' grid'
+    add board square = Board squares' grid'
       where
-        squares'  = M.insert square (S.fromList positions, S.empty) _squares
-        grid'     = M.union (M.fromList cellmap) _grid
+        squares'  = M.insert square (S.fromList positions, S.empty) (board ^. squares)
+        grid'     = M.union (M.fromList cellmap) (board ^. grid)
         cellmap   = fmap (square,) <$> cs
         cs        = cells square
         positions = map fst cs
@@ -206,9 +205,10 @@ makeBoard = foldl add (Board M.empty M.empty)
 
 -- Deshroud all the tiles in a square
 deshroud :: Square -> Board -> Board
-deshroud square Board{..} = Board squares' _grid
+deshroud square board = Board squares' grid'
   where
-    squares' = M.adjust f square _squares
+    squares' = M.adjust f square (board ^. squares)
+    grid'    = board ^. grid
 
     f :: (CellSet, CellSet) -> (CellSet, CellSet)
     f (shrouded, deshrouded) = (S.empty, S.union shrouded deshrouded)
