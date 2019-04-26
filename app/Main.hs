@@ -52,18 +52,19 @@ processEvent event world = runState state world
   where
     state = case event of
 
-      EventMotion (x, y)                         -> mouseMove (x, y)
+      EventMotion (x, y)                           -> mouseMove (x, y)
 
-      EventKey (MouseButton WheelUp   ) _    _ _ -> debounce 100 "wheelUp" wheelUp
-      EventKey (MouseButton WheelDown ) _    _ _ -> debounce 100 "wheelDown" wheelDown
-      EventKey (MouseButton LeftButton) Down _ _ -> leftClick
+      EventKey (MouseButton WheelUp     ) _    _ _ -> debounce 100 "wheelUp" wheelUp
+      EventKey (MouseButton WheelDown   ) _    _ _ -> debounce 100 "wheelDown" wheelDown
+      EventKey (MouseButton LeftButton  ) Down _ _ -> leftClick
+      EventKey (MouseButton MiddleButton) Down _ _ -> clearPlacingSquare
 
-      EventKey (Char '0'              ) Down _ _ -> clearPlacingSquare
-      EventKey (Char  c               ) Down _ _ -> if c `elem` "12345678"
-                                                    then digitPress (digitToInt c)
-                                                    else return False
+      EventKey (Char '0'                ) Down _ _ -> clearPlacingSquare
+      EventKey (Char  c                 ) Down _ _ -> if c `elem` "12345678"
+                                                      then digitPress (digitToInt c)
+                                                      else return False
 
-      otherwise                                  -> return False
+      otherwise                                    -> return False
 
 
 step :: Float -> World -> World
