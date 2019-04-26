@@ -56,15 +56,15 @@ leftClick = do
 -- Count the number of available squares of each size for rendering in the tray
 recount :: State World ()
 recount = do
-  usedSizes <- map size <$> alreadyCovered
+  usedSizes <- map size <$> alreadyUsed
 
   modify $ set placeables (countPlaceables usedSizes)
 
   return ()
 
 
-alreadyCovered :: State World [Square]
-alreadyCovered = do
+alreadyUsed :: State World [Square]
+alreadyUsed = do
   squares <- gets $ view (board . squares)
   placed  <- gets $ view placed
 
@@ -75,7 +75,7 @@ alreadyCovered = do
 place :: WorldAction
 place = do
   Just square <- gets $ view squareToPlace
-  overlapping <- any (square `overlaps`) <$> alreadyCovered
+  overlapping <- any (square `overlaps`) <$> alreadyUsed
 
   if overlapping
     then
