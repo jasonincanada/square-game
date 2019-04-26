@@ -4,13 +4,28 @@ module SquareGame.Render (
 
 import qualified Data.Map as M
 import qualified Data.Set as S
-import           Data.Maybe       (isJust)
+import           Data.Maybe       (fromJust, isJust)
 import           Data.Semigroup   ((<>))
 import           Control.Lens
 import           Graphics.Gloss
 import           SquareGame
 import           SquareGame.UI    (cellBorderPath, shiftX, shiftY, squareBorderPath, squareDigit)
 import           SquareGame.World
+
+colors :: M.Map Size Color
+colors = M.fromList [ (8, makeColor 0.9 0.9 0.9 solid)
+                    , (7, makeColor 1.0 0.5 0.5 solid)
+                    , (6, makeColor 1.0 1.0 0.6 solid)
+                    , (5, makeColor 0.5 1.0 0.5 solid)
+                    , (4, makeColor 0.6 0.8 1.0 solid)
+                    , (3, makeColor 1.0 0.6 0.8 solid)
+                    , (2, makeColor 0.9 0.5 0.0 solid)
+                    , (1, makeColor 1.0 1.0 1.0 solid) ]
+  where
+    solid = 255
+
+fade :: Color -> Color
+fade = withAlpha 0.5
 
 
 render :: World -> Picture
@@ -21,13 +36,13 @@ render world = picture
     picture      = mconcat $ map renderFull full
                                ++ map renderShroud shroud
                                ++ map renderUnshroud unshrouded
-                               ++ cellHoveredOver
                                ++ map renderPlaced (world ^. placed)
-                               ++ pickup (world ^. squareToPickup)
-                               ++ msg
                                ++ if isJust (world ^. squareToPlace)
-                                    then placingSquare
+                                    then renderPlacingSquare (fromJust $ world ^. squareToPlace)
                                     else deshroudableCells
+                               ++ pickup (world ^. squareToPickup)
+                               ++ cellHoveredOver
+                               ++ msg
 
 
     full         = fullSquares squares
@@ -35,14 +50,6 @@ render world = picture
     pickup :: Maybe Square -> [Picture]
     pickup Nothing       = [Blank]
     pickup (Just square) = [Color blue $ renderFull square]
-
-    renderPlaced :: Square -> Picture
-    renderPlaced square = mconcat [Color green $ renderFull square]
-
-    placingSquare :: [Picture]
-    placingSquare = case world ^. squareToPlace of
-                      Nothing     -> mempty
-                      Just square -> [Color yellow $ renderFull square]
 
 
     deshroudableCells :: [Picture]
@@ -62,13 +69,54 @@ render world = picture
 
     -- Render a fully-unshrouded square
     renderFull :: Square -> Picture
-    renderFull square = line <> digit
+    renderFull square = fill <> border <> digit
       where
-        line  = Line (squareBorderPath square)
+        fill   = Color (bright $ bright color) $ Polygon path
+        border = Line path
+        path   = squareBorderPath square
+        color  = colors M.! size square
 
-        digit = translateToDigit square
-                  $ Scale 0.2 0.2
-                  $ Text (show $ size square)
+        digit  = translateToDigit square
+                   $ Color black
+                   $ Scale 0.2 0.2
+                   $ Text (show $ size square)
+
+
+    -- Render a placed square, darkening the color of the shrouded cells (which become points for
+    -- the player if they're placed correctly)
+    renderPlaced :: Square -> Picture
+    renderPlaced square = fillshroud <> fillunshroud <> border <> digit
+      where
+        fillshroud   = mconcat $ map (Color (dark   color) . Polygon . cellWholeBorderPath) shrouded
+        fillunshroud = mconcat $ map (Color (bright color) . Polygon . cellWholeBorderPath) unshrouded
+
+        shrouded     = S.toList $ S.intersection placedCells shroudset
+        unshrouded   = S.toList $ S.difference   placedCells shroudset
+
+        placedCells  = S.fromList $ map fst $ cells square
+
+        border       = Line path
+        path         = squareBorderPath square
+        color        = colors M.! size square
+
+        digit        = translateToDigit square
+                         $ Color black
+                         $ Scale 0.2 0.2
+                         $ Text (show $ size square)
+
+
+    renderPlacingSquare :: Square -> [Picture]
+    renderPlacingSquare square = [ fill <> digit ]
+      where
+        fill   = Color (fade $ fade color) $ Polygon path
+        path   = squareBorderPath square
+        color  = colors M.! size square
+
+        digit  = translateToDigit square
+                   $ Color black
+                   $ Scale 0.2 0.2
+                   $ Text (show $ size square)
+
 
     renderShroud :: Cell -> Picture
     renderShroud cell = Polygon (cellWholeBorderPath cell)
@@ -84,6 +132,7 @@ render world = picture
               $ show (world ^. renderCount) ++ ", " ++ (world ^. message) ]
 
     shroud       = concatMap (S.toList . fst) (M.elems squares)
+    shroudset    = foldr (S.union . fst) S.empty (M.elems squares)
     unshroud     = concatMap (S.toList . snd) (M.elems squares)
 
     unshrouded   = map (\cell -> (cell, snd $ grid M.! cell)) unshroud
