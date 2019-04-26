@@ -8,6 +8,7 @@ module SquareGame.Render (
 
 import qualified Data.Map as M
 import qualified Data.Set as S
+import           Data.Semigroup ((<>))
 import           Control.Lens
 import           Graphics.Gloss
 import           Helpers (minBy)
