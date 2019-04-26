@@ -287,11 +287,10 @@ debounce delay event action = do
       nextFrom time >> action
 
   where
-    nextFrom :: Float -> WorldAction
+    nextFrom :: Float -> State World ()
     nextFrom time = do
       let earliestTime = time + (delay / 1000)
       modify $ over debounces (M.insert event earliestTime)
-      return False
 
 
 advance :: Float -> WorldAction
