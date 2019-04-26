@@ -16,7 +16,7 @@ import           Control.Lens
 import           Control.Monad.State
 import           Data.List         (delete)
 import           SquareGame
-import           SquareGame.Render (windowToCell, windowToSquareEdge)
+import           SquareGame.UI     (windowToCell, windowToSquareEdge)
 import           SquareGame.World
 
 

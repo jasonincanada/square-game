@@ -11,6 +11,7 @@ import           Graphics.Gloss.Interface.IO.Interact
 import           SquareGame
 import           SquareGame.Actions
 import           SquareGame.Render
+import           SquareGame.UI     (windowWidth, windowHeight)
 import           SquareGame.World
 
 file :: FilePath

@@ -3,6 +3,7 @@
 ::''m::app/Main.hs
 ::''a::src/SquareGame/Actions.hs
 ::''r::src/SquareGame/Render.hs
+::''u::src/SquareGame/UI.hs
 ::''w::src/SquareGame/World.hs
 ::''t::test/Spec.hs
 
