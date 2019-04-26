@@ -1,3 +1,5 @@
+{-# Language MultiWayIf #-}
+
 module SquareGame.Actions (
     advance
   , clearPlacingSquare
@@ -44,13 +46,10 @@ leftClick = do
   picking <- gets $ view squareToPickup
   cells   <- gets $ view cellsToClick
 
-  if placing /= Nothing
-    then place
-    else if picking /= Nothing
-           then pickUp
-           else if cells /= Nothing
-                then reveal
-                else return False
+  if | placing /= Nothing -> place
+     | picking /= Nothing -> pickUp
+     | cells   /= Nothing -> reveal
+     | otherwise          -> return False
 
 
 {- Place mode - place a square if it doesn't overlap with any already-revealed or placed square -}
