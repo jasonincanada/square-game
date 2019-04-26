@@ -20,21 +20,9 @@ main :: IO ()
 main = do
   board <- fromFile file
 
-  let started = randomDeshroud 1 board
-  let clicked = click (0,0,8) SRight
-  let world   = World
-                  started
-                  "default message"
-                  0
-                  Nothing
-                  S.empty
-                  Blank
-                  0
-                  Nothing
-                  Nothing
-                  []
-                  Nothing
-
+  let started   = randomDeshroud 1 board
+  let clicked   = click (0,0,8) SRight
+  let world     = makeWorld started
   let withCache = world & rendered .~ render world
 
   play window white 10 withCache displayBoard events step

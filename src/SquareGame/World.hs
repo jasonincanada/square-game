@@ -3,7 +3,8 @@
 module SquareGame.World where
 
 import Control.Lens
-import Graphics.Gloss (Picture)
+import Data.Set       (empty)
+import Graphics.Gloss (Picture(Blank))
 import SquareGame
 
 data World = World { _board     :: Board
@@ -29,3 +30,16 @@ data World = World { _board     :: Board
                    }
 
 makeLenses ''World
+
+makeWorld :: Board -> World
+makeWorld board = World board
+                        "starting message"
+                        0
+                        Nothing
+                        Data.Set.empty
+                        Blank
+                        0
+                        Nothing
+                        Nothing
+                        []
+                        Nothing
