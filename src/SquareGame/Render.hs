@@ -8,7 +8,7 @@ import           Data.Semigroup   ((<>))
 import           Control.Lens
 import           Graphics.Gloss
 import           SquareGame
-import           SquareGame.UI    (boardscale, boardToWindow, shiftX, shiftY)
+import           SquareGame.UI    (boardScale, boardToWindow, shiftX, shiftY)
 import           SquareGame.World
 
 
@@ -129,8 +129,8 @@ render world = picture
 translateToSquareCenter :: SRow -> SCol -> Size -> Picture -> Picture
 translateToSquareCenter row col size = Translate x y
   where
-    x = boardscale * (2*  c  + s) + shiftX - 10
-    y = boardscale * (2*(-r) - s) + shiftY - 10
+    x = boardScale * (2*  c  + s) + shiftX - 10
+    y = boardScale * (2*(-r) - s) + shiftY - 10
     c = fromIntegral col
     r = fromIntegral row
     s = fromIntegral size

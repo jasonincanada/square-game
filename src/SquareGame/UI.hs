@@ -1,5 +1,5 @@
 module SquareGame.UI (
-    boardscale
+    boardScale
   , boardToWindow
   , shiftX
   , shiftY
@@ -14,20 +14,20 @@ import           Helpers (minBy)
 import           SquareGame
 
 {- UI globals -}
-boardscale :: Float
-boardscale = 10
+boardScale :: Float
+boardScale = 10
 
 windowHeight = 1000 :: Int
 windowWidth  = 1000 :: Int
-shiftX       = (-1) * boardscale * 72 / 2
-shiftY       =        boardscale * 72 / 2
+shiftX       = (-1) * boardScale * 72 / 2
+shiftY       =        boardScale * 72 / 2
 
 
 boardToWindow :: CRow -> CCol -> (Float, Float)
 boardToWindow row col = (x, y)
   where
-    x = fromIntegral col    * boardscale + shiftX
-    y = fromIntegral (-row) * boardscale + shiftY
+    x = fromIntegral col    * boardScale + shiftX
+    y = fromIntegral (-row) * boardScale + shiftY
 
 
 windowToCell :: Float -> Float -> Maybe Cell
@@ -36,8 +36,8 @@ windowToCell x y
     && col >= 0 && col < 72 = Just (row, col)
   | otherwise               = Nothing
   where
-    row = floor $ (y - shiftY) / boardscale * (-1)
-    col = floor $ (x - shiftX) / boardscale
+    row = floor $ (y - shiftY) / boardScale * (-1)
+    col = floor $ (x - shiftX) / boardScale
 
 
 windowToSquareEdge :: CellGrid -> Float -> Float -> Maybe (Square, SquareSide)
@@ -58,9 +58,9 @@ windowToSquareEdge grid x y = do
 
 
 toWindowY :: Square -> SquareSide -> Float
-toWindowY (row, _, _   ) STop    = fromIntegral (-row       ) * 2 * boardscale + shiftY
-toWindowY (row, _, size) SBottom = fromIntegral (-(row+size)) * 2 * boardscale + shiftY
+toWindowY (row, _, _   ) STop    = fromIntegral (-row       ) * 2 * boardScale + shiftY
+toWindowY (row, _, size) SBottom = fromIntegral (-(row+size)) * 2 * boardScale + shiftY
 
 toWindowX :: Square -> SquareSide -> Float
-toWindowX (_, col, _   ) SLeft   = fromIntegral  col          * 2 * boardscale + shiftX
-toWindowX (_, col, size) SRight  = fromIntegral (col+size   ) * 2 * boardscale + shiftX
+toWindowX (_, col, _   ) SLeft   = fromIntegral  col          * 2 * boardScale + shiftX
+toWindowX (_, col, size) SRight  = fromIntegral (col+size   ) * 2 * boardScale + shiftX
