@@ -1,6 +1,7 @@
 module SquareGame.UI (
     boardScale
   , boardToWindow
+  , clickables
   , shiftX
   , shiftY
   , windowToCell
@@ -10,6 +11,7 @@ module SquareGame.UI (
   ) where
 
 import qualified Data.Map as M
+import qualified Data.Set as S
 import           Helpers (minBy)
 import           SquareGame
 
@@ -64,3 +66,23 @@ toWindowY (row, _, size) SBottom = fromIntegral (-(row+size)) * 2 * boardScale +
 toWindowX :: Square -> SquareSide -> Float
 toWindowX (_, col, _   ) SLeft   = fromIntegral  col          * 2 * boardScale + shiftX
 toWindowX (_, col, size) SRight  = fromIntegral (col+size   ) * 2 * boardScale + shiftX
+
+
+clickables :: Float -> Float -> Board -> CellSet
+clickables x y (Board squares grid) = cells
+  where
+    cells = case windowToSquareEdge grid x y of
+              Nothing             -> S.empty
+              Just (square, edge) -> if fullyRevealed square
+                                     then getFor square edge
+                                     else S.empty
+
+    fullyRevealed :: Square -> Bool
+    fullyRevealed square = S.empty == fst (squares M.! square)
+
+    getFor :: Square -> SquareSide -> CellSet
+    getFor square edge = intersect
+      where
+        intersect = S.intersection all shrouded
+        all       = click square edge
+        shrouded  = foldr S.union S.empty (M.elems $ M.map fst squares)

@@ -16,7 +16,7 @@ import           Control.Lens
 import           Control.Monad.State
 import           Data.List         (delete)
 import           SquareGame
-import           SquareGame.UI     (windowToCell, windowToSquareEdge)
+import           SquareGame.UI     (clickables, windowToCell)
 import           SquareGame.World
 
 
@@ -227,26 +227,6 @@ setPickingSquare = do
 
                                         where r = crow `div` 2
                                               c = ccol `div` 2
-
-
-clickables :: Float -> Float -> Board -> CellSet
-clickables x y (Board squares grid) = cells
-  where
-    cells = case windowToSquareEdge grid x y of
-              Nothing             -> S.empty
-              Just (square, edge) -> if fullyRevealed square
-                                     then getFor square edge
-                                     else S.empty
-
-    fullyRevealed :: Square -> Bool
-    fullyRevealed square = S.empty == fst (squares M.! square)
-
-    getFor :: Square -> SquareSide -> CellSet
-    getFor square edge = intersect
-      where
-        intersect = S.intersection all shrouded
-        all       = click square edge
-        shrouded  = foldr S.union S.empty (M.elems $ M.map fst squares)
 
 
 wheelUp :: WorldAction
