@@ -1,9 +1,9 @@
 module SquareGame.UI (
-    boardScale
-  , boardToWindow
+    boardToWindow
   , clickables
   , shiftX
   , shiftY
+  , squareCenter
   , windowToCell
   , windowWidth
   , windowHeight
@@ -65,6 +65,16 @@ toWindowY (row, _, size) SBottom = fromIntegral (-(row+size)) * 2 * boardScale +
 toWindowX :: Square -> SquareSide -> Float
 toWindowX (_, col, _   ) SLeft   = fromIntegral  col          * 2 * boardScale + shiftX
 toWindowX (_, col, size) SRight  = fromIntegral (col+size   ) * 2 * boardScale + shiftX
+
+
+squareCenter :: Square -> (Float, Float)
+squareCenter (row, col, size) = (x, y)
+  where
+    x = boardScale * (2*  c  + s) + shiftX - 10
+    y = boardScale * (2*(-r) - s) + shiftY - 10
+    c = fromIntegral col
+    r = fromIntegral row
+    s = fromIntegral size
 
 
 clickables :: Float -> Float -> Board -> CellSet
