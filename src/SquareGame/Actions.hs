@@ -1,6 +1,7 @@
 module SquareGame.Actions (
     advance
   , clearPlacingSquare
+  , debounce
   , digitPress
   , leftClick
   , mouseMove
@@ -271,7 +272,30 @@ wheel f = do
   return True
 
 
+debounce :: Float -> String -> WorldAction -> WorldAction
+debounce delay event action = do
+  map  <- gets $ view debounces
+  time <- gets $ view time
+
+  if event `M.member` map
+    then
+      if time >= map M.! event
+        then nextAt time >> action
+        else return False
+
+    else
+      nextAt time >> action
+
+  where
+    nextAt :: Float -> WorldAction
+    nextAt time = do
+      let earliestTime = time + (delay / 1000)
+      modify $ over debounces (M.insert event earliestTime)
+      return False
+
+
 advance :: Float -> WorldAction
 advance seconds = do
+  modify $ over time  (+seconds)
   modify $ over steps (+1)
   return False
