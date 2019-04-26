@@ -60,7 +60,7 @@ The roadmap is still new and will evolve over time:
     - [ ] Hovering over an edge shows a visual cue selecting that edge for clicking
     - [ ] Render "click-path" through puzzle
   - [ ] Display remaining tiles (the placeable sub-squares)
-  - [ ] Player drags a tile onto the board
+  - [x] Player drags a tile onto the board
 
 
 ## Concept Art
