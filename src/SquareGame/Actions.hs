@@ -17,6 +17,7 @@ import           Control.Arrow     ((>>>))
 import           Control.Lens
 import           Control.Monad.State
 import           Data.List         (delete)
+import           Data.Maybe        (isJust)
 import           SquareGame
 import           SquareGame.UI     (clickables, windowToCell)
 import           SquareGame.World
@@ -46,10 +47,10 @@ leftClick = do
   picking <- gets $ view squareToPickup
   cells   <- gets $ view cellsToClick
 
-  if | placing /= Nothing -> place
-     | picking /= Nothing -> pickUp
-     | cells   /= Nothing -> reveal
-     | otherwise          -> return False
+  if | isJust placing -> place
+     | isJust picking -> pickUp
+     | isJust cells   -> reveal
+     | otherwise      -> return False
 
 
 {- Place mode - place a square if it doesn't overlap with any already-revealed or placed square -}
