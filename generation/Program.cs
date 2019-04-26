@@ -26,8 +26,8 @@ namespace jrh.PartridgeSquares.Generation
         }
     }
 
-    // The main board to tile with sub-squares. This is a highly mutable structure with fixed array
-    // sizes for the column levels and a variable-sized stack for the list of currently placed squares
+    // The main board to tile with sub-squares. This is a highly mutable structure with a fixed-size
+    // array for the column levels and a variable-sized stack for the list of currently placed squares
     public class Board
     {
         public static int N { get; private set; }
@@ -213,7 +213,7 @@ namespace jrh.PartridgeSquares.Generation
         }
 
         // A board's filename is the board size plus the square sizes in order of their
-        // top-down/left-right placement, this uniquely identifies a Partridge Square
+        // left-right/top-down placement, this uniquely identifies a Partridge Square
         private string GetFileName()
         {
             string prefix = string.Format("squares/N{0}-", N);
