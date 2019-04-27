@@ -49,20 +49,24 @@ render world = picture
     maybeRender _      Nothing  = Blank
     maybeRender render (Just a) = render a
 
-
-    -- Render a fully-unshrouded square
-    renderFull :: Square -> Picture
-    renderFull square = fill <> border <> digit
+    squareBorderDigit :: Square -> Picture
+    squareBorderDigit square = border <> digit
       where
-        fill   = Color (bright $ bright color) $ Polygon path
         border = Line path
         path   = squareBorderPath square
-        color  = colors M.! size square
-
         digit  = translateToDigit square
                    $ Color black
                    $ Scale digitScale digitScale
                    $ Text (show $ size square)
+
+
+    -- Render a fully-unshrouded square
+    renderFull :: Square -> Picture
+    renderFull square = fill <> squareBorderDigit square
+      where
+        path   = squareBorderPath square
+        fill   = Color (bright $ bright color) $ Polygon path
+        color  = colors M.! size square
 
 
     renderShroud :: Cell -> Picture
@@ -75,24 +79,16 @@ render world = picture
     -- Render a placed square, darkening the color of the shrouded cells (which become points for
     -- the player if they're placed correctly)
     renderPlaced :: Square -> Picture
-    renderPlaced square = fillshroud <> fillunshroud <> border <> digit
+    renderPlaced square = fillshroud <> fillunshroud <> squareBorderDigit square
       where
         fillshroud   = mconcat $ map (Color (dark   color) . Polygon . cellWholeBorderPath) shrouded
         fillunshroud = mconcat $ map (Color (bright color) . Polygon . cellWholeBorderPath) unshrouded
 
         shrouded     = S.toList $ S.intersection placedCells shroudset
         unshrouded   = S.toList $ S.difference   placedCells shroudset
-
         placedCells  = S.fromList $ map fst $ cells square
 
-        border       = Line path
-        path         = squareBorderPath square
         color        = colors M.! size square
-
-        digit        = translateToDigit square
-                         $ Color black
-                         $ Scale digitScale digitScale
-                         $ Text (show $ size square)
 
 
     renderPlacingSquare :: Square -> Picture
