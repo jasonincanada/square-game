@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS board (
  boardID     INTEGER PRIMARY KEY,
- sequence    TEXT    NOT NULL
+ sequence    TEXT    NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS boardSquare (
