@@ -25,6 +25,13 @@ CREATE TABLE IF NOT EXISTS game (
   fkBoardID    INTEGER NOT NULL,
   fkPlayerID   INTEGER NOT NULL,
 
+  -- 1: One of each square size from 2..8
+  -- 8: Deshroud all 8-squares
+  deshroudType INTEGER NOT NULL,
+
+  -- eg: "1232543" for Type 1
+  deshroudData TEXT NULL,
+
   FOREIGN KEY (fkBoardID)  REFERENCES board(boardID),
   FOREIGN KEY (fkPlayerID) REFERENCES player(playerID)
 );
