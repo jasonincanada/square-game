@@ -2,28 +2,40 @@
 
 module Main where
 
+import qualified Data.Map as M
 import qualified Data.Set as S
 import           Control.Lens
 import           Control.Monad.State
 import           Data.Char (digitToInt)
 import           Graphics.Gloss
 import           Graphics.Gloss.Interface.IO.Interact
+import           System.Environment (getArgs)
 import           SquareGame
 import           SquareGame.Actions
 import           SquareGame.Render
 import           SquareGame.UI     (windowWidth, windowHeight)
 import           SquareGame.World
 
-file :: FilePath
-file = "generation/squares/N8-888666688445522333178876768555777744.sqr"
+getSequences :: IO [String]
+getSequences = lines <$> readFile "generation/squares/N8-sequences.txt"
+
+fileFor :: Int -> IO String
+fileFor n = do
+  nth <- (!! (n-1)) <$> getSequences
+  return ("generation/squares/N8-" ++ nth ++ ".sqr")
+
 
 main :: IO ()
 main = do
-  board <- fromFile file
+  boardID <- read . head <$> getArgs
+  board   <- fileFor boardID >>= fromFile
 
-  let started   = randomDeshroud 1 board
-  let clicked   = click (0,0,8) SRight
-  let world     = makeWorld started
+  let ss        = M.keys (board ^. squares)
+  let cleared   = foldr deshroud board ss
+
+  --let started   = randomDeshroud 1 board
+  --let clicked   = click (0,0,8) SRight
+  let world     = makeWorld ("Board " ++ show boardID) cleared -- started
   let withCache = world & rendered .~ render world
 
   play window white 10 withCache displayBoard events step

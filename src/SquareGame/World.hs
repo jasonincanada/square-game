@@ -38,9 +38,9 @@ data World = World { _board     :: Board
 
 makeLenses ''World
 
-makeWorld :: Board -> World
-makeWorld board = World board
-                        "starting message"
+makeWorld :: String -> Board -> World
+makeWorld msg board = World board
+                        msg
                         0
                         0.0
                         Nothing
