@@ -76,7 +76,6 @@ coalgebra (tiles, sizes)
     place square = (square, (remainingTiles, remainingSquares))
       where
         remainingTiles  = S.difference tiles (squareTiles M.! square)
-        (_, _, size)    = square
 
         -- foldrWithKey :: (Key -> a -> b -> b) -> b -> IntMap a -> b
         remainingSquares = IM.foldrWithKey decide IM.empty sizes
@@ -86,6 +85,8 @@ coalgebra (tiles, sizes)
           | s == size && count == 1 = id
           | s == size && count >  1 = IM.insert s (count-1)
           | otherwise               = IM.insert s count
+          where
+            (_, _, size) = square
 
 
 
