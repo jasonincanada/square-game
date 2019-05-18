@@ -76,7 +76,7 @@
 {-# Language DeriveFunctor #-}
 {-# Language TupleSections #-}
 
-module Generation where
+module Generation (generation) where
 
 import Data.Bifunctor (bimap)
 import Data.Bool      (bool)
