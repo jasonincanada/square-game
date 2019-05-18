@@ -13,7 +13,7 @@ type Height      = Int
 type Width       = Int
 type Rectangle   = (SRow, SCol, Height, Width)
 type Region      = [Rectangle]
-type SizeMap     = IM.IntMap Size
+type SizeMap     = IM.IntMap Int
 
 
 --allSquares :: [Size]
@@ -80,7 +80,7 @@ coalgebra (tiles, sizes)
         -- foldrWithKey :: (Key -> a -> b -> b) -> b -> IntMap a -> b
         remainingSquares = IM.foldrWithKey decide IM.empty sizes
 
-        decide :: Size -> Size -> (SizeMap -> SizeMap)
+        decide :: Size -> Int -> (SizeMap -> SizeMap)
         decide s count
           | s == size && count == 1 = id
           | s == size && count >  1 = IM.insert s (count-1)
