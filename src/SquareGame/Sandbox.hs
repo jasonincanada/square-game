@@ -24,6 +24,17 @@ allSizes = IM.fromList [ (i, i) | i <- [1..8] ]
 bowSizes :: SizeMap
 bowSizes = IM.fromList [ (4,2), (6,2), (7,4), (8,4) ]
 
+gardenSizes :: SizeMap
+gardenSizes = IM.fromList [ (2,2), (3,2), (4,2), (5,2), (6,1) ]
+
+-- Remove some squares from the original pile
+without :: [SizeMap] -> SizeMap
+without = removeZeroes . foldl (IM.unionWith (-)) allSizes
+  where
+    removeZeroes :: SizeMap -> SizeMap
+    removeZeroes = IM.filter (/= 0)
+
+
 topLeftTile, top2x2 :: Region
 topLeftTile = [ (0,0,1,1) ]
 top2x2      = [ (0,0,2,2) ]
@@ -51,6 +62,28 @@ squareTiles = M.fromList [ (square, for square) | square <- squares ]
 
     for (row, col, size) = S.fromList [ (row+r, col+c) | r <- [0..size-1],
                                                          c <- [0..size-1]]
+
+
+-- The tiles left over after the two symmetrical regions in family 1 squares are carved out
+family1 :: TileSet
+family1 = wholeBoard `S.difference` used
+  where
+    wholeBoard :: TileSet
+    wholeBoard = tilesFor [(0,0,36,36)]
+
+    used :: TileSet
+    used = S.union garden' bow'
+      where
+        garden' = tilesFor $ offset 0  0 garden
+        bow'    = tilesFor $ offset 15 0 bow
+
+
+-- Translate a region away from the top-left corner
+offset :: SRow -> SCol -> Region -> Region
+offset dr dc = map f
+  where
+    f (row, col, height, width) = (row+dr, col+dc, height, width)
+
 
 
 data TrieF a = NodeF [(Square, a)]
@@ -123,6 +156,14 @@ tiled tiles sizes = filter fullyTiled results
 
 
 {-
+    λ> tiled family1 (without [bowSizes, gardenSizes])
+    [fromList [(0,9,7),(0,16,7),(0,23,7),(0,30,6),(6,30,6),(7,9,8),(7,17,8),(7,25,5),(12,25,3),(12,28,8),(15,9,1),(15,10,6),(16,0,5),(16,5,5),(20,28,8)]]
+
+    λ> length $ tiled family1 (without [bowSizes, gardenSizes])
+    1
+
+
+    ------
     λ> length $ tiled (tilesFor bow) bowSizes
     11
 

@@ -4,7 +4,7 @@ module Main where
 
 import qualified Data.Map as M
 import qualified Data.Set as S
-import           Control.Lens
+import           Control.Lens hiding (without)
 import           Control.Monad.State
 import           Data.Char (digitToInt)
 import           Graphics.Gloss
