@@ -21,6 +21,9 @@ type SizeMap     = IM.IntMap Int
 allSizes :: SizeMap
 allSizes = IM.fromList [ (i, i) | i <- [1..8] ]
 
+bowSizes :: SizeMap
+bowSizes = IM.fromList [ (4,2), (6,2), (7,4), (8,4) ]
+
 topLeftTile, top2x2 :: Region
 topLeftTile = [ (0,0,1,1) ]
 top2x2      = [ (0,0,2,2) ]
@@ -30,7 +33,7 @@ bow, garden :: Region
 garden      = [ (0,0,16,9) ]
 bow         = [ (0 ,16,6 ,12)
               , (6 ,0 ,15,28)
-              , (28,28,8 ,8 ) ]
+              , (13,28,8 ,8 ) ]
 
 tilesFor :: Region -> TileSet
 tilesFor areas = foldr S.union S.empty $ for <$> areas
@@ -65,7 +68,8 @@ coalgebra (tiles, sizes)
     (row, col) = head $ S.toList tiles
 
     subs = [ place square | size <- IM.keys sizes,
-                                      
+                            row+size <= 36 && col+size <= 36,
+
                             let square       = (row, col, size),
                             let span         = squareTiles M.! square,
                             let intersection = S.intersection span tiles,
@@ -105,11 +109,11 @@ hylo coalg alg = alg . (fmap $ hylo coalg alg) . coalg
 
 -- Find all placements that cover the whole region being tiled
 -- (not necessarily using all available squares)
-tiled :: TileSet -> [S.Set Square]
-tiled tiles = filter fullyTiled results
+tiled :: TileSet -> SizeMap -> [S.Set Square]
+tiled tiles sizes = filter fullyTiled results
   where
     results :: [S.Set Square]
-    results = hylo coalgebra algebra (tiles, allSizes)
+    results = hylo coalgebra algebra (tiles, sizes)
 
     fullyTiled :: S.Set Square -> Bool
     fullyTiled squares = totalTiles == S.size tiles
@@ -119,6 +123,14 @@ tiled tiles = filter fullyTiled results
 
 
 {-
+    λ> length $ tiled (tilesFor bow) bowSizes
+    11
+
+    λ> head $ tiled (tilesFor bow) bowSizes
+    fromList [(0,16,4),(0,20,8),(4,16,4),(6,0,8),(6,8,8),(8,16,6),(8,22,6),(13,28,8),(14,0,7),(14,7,7),(14,14,7),(14,21,7)]
+
+
+    ------
     λ> tiled (tilesFor top2x2)
     [fromList [(0,0,2)]]
 
