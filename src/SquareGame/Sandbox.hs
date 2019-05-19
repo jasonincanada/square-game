@@ -102,7 +102,34 @@ algebra (NodeF boards) = concatMap addsquare boards
 hylo :: Functor f => Coalgebra f a -> Algebra f b -> a -> b
 hylo coalg alg = alg . (fmap $ hylo coalg alg) . coalg
 
+
+-- Find all placements that cover the whole region being tiled
+-- (not necessarily using all available squares)
+tiled :: TileSet -> [S.Set Square]
+tiled tiles = filter fullyTiled results
+  where
+    results :: [S.Set Square]
+    results = hylo coalgebra algebra (tiles, allSizes)
+
+    fullyTiled :: S.Set Square -> Bool
+    fullyTiled squares = totalTiles == S.size tiles
+      where
+        totalTiles             = sum $ map tileCount (S.elems squares)
+        tileCount (_, _, size) = size * size
+
+
 {-
+    λ> tiled (tilesFor top2x2)
+    [fromList [(0,0,2)]]
+
+    λ> length $ tiled (tilesFor garden)
+    24
+
+    λ> head $ tiled (tilesFor garden)
+    fromList [(0,0,2),(0,2,2),(0,4,5),(2,0,4),(5,4,5),(6,0,4),(10,0,3),(10,3,6),(13,0,3)]
+
+
+    ------
     λ> hylo coalgebra algebra (tilesFor top2x2, allSizes)
     [fromList [(0,0,1)],fromList [(0,0,2)]]
 
