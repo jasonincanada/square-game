@@ -16,19 +16,31 @@ type Height      = Int
 type Width       = Int
 type Rectangle   = (SRow, SCol, Height, Width)
 type SizeMap     = IM.IntMap Int
+type RegionName  = String
 
-data Region = Region { name       :: String
-                     , squares    :: [(Size, Int)]
+data Region = Region { squares    :: [(Size, Int)]
                      , rectangles :: [(Int, Int, Int, Int)]
                      } deriving (Generic, Show)
+
+data RegionMap = RegionMap (M.Map RegionName Region)
+                 deriving (Generic, Show)
 
 instance ToJSON Region where
   toEncoding = genericToEncoding defaultOptions
 
 instance FromJSON Region
 
-bow    = Region "bow"    [(4,2),(6,2),(7,4),(8,4)]       [(0,16,6,12), (6,0,15,28), (13,28,8,8) ]
-garden = Region "garden" [(2,2),(3,2),(4,2),(5,2),(6,1)] [(0,0,16,9)]
+instance ToJSON RegionMap where
+  toEncoding = genericToEncoding defaultOptions
+
+instance FromJSON RegionMap
+
+regionMap :: RegionMap
+regionMap = RegionMap map
+  where
+    map = M.fromList [ ("bow",    Region [(4,2),(6,2),(7,4),(8,4)]       [(0,16,6,12), (6,0,15,28), (13,28,8,8) ])
+                     , ("garden", Region [(2,2),(3,2),(4,2),(5,2),(6,1)] [(0,0,16,9)])
+                     ]
 
 
 -- A tiling is a left-right/top-down placement of squares across a Region
@@ -82,7 +94,7 @@ without = removeZeroes . foldl (IM.unionWith (-)) allSizes
 
 
 tilesFor :: Region -> TileSet
-tilesFor (Region _ _ areas) = foldr S.union S.empty $ for <$> areas
+tilesFor (Region _ areas) = foldr S.union S.empty $ for <$> areas
   where
     for (row, col, height, width) = S.fromList [ (row+r, col+c) | r <- [0..height-1],
                                                                   c <- [0..width -1]]
@@ -196,7 +208,7 @@ tiled tiles sizes = filter fullyTiled results
 --- IO ---
 ----------
 
-regions :: IO (Maybe [Region])
+regions :: IO (Maybe RegionMap)
 regions = decodeFileStrict "regions.json"
 
 families :: IO (Maybe [Family])
@@ -215,9 +227,9 @@ families = decodeFileStrict "families.json"
 
     ------
     λ> import Data.Aeson
-    λ> encodeFile "regions.json" [bow, garden]
+    λ> encodeFile "regions.json" regionMap
     λ> regions
-    Just [Region {name = "bow", squares = [(4,2),(6,2),(7,4),(8,4)], rectangles = [(0,16,6,12),(6,0,15,28),(13,28,8,8)]},Region {name = "garden", squares = [(2,2),(3,2),(4,2),(5,2),(6,1)], rectangles = [(0,0,16,9)]}]
+    Just (RegionMap (fromList [("bow",Region {squares = [(4,2),(6,2),(7,4),(8,4)], rectangles = [(0,16,6,12),(6,0,15,28),(13,28,8,8)]}),("garden",Region {squares = [(2,2),(3,2),(4,2),(5,2),(6,1)], rectangles = [(0,0,16,9)]})]))
 
 
     ------
