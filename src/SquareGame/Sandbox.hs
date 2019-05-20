@@ -22,6 +22,7 @@ type FamilyName  = String
 
 data Region = Region { squares    :: [(Size, Int)]
                      , rectangles :: [Rectangle]
+                     , tilings    :: [Tiling]
                      } deriving (Generic, Show)
 
 data RegionMap = RegionMap { regionMap :: M.Map RegionName Region }
@@ -31,8 +32,8 @@ data RegionMap = RegionMap { regionMap :: M.Map RegionName Region }
 globalRegionMap :: RegionMap
 globalRegionMap = RegionMap map
   where
-    map = M.fromList [ ("bow",    Region [(4,2),(6,2),(7,4),(8,4)]       [(0,16,6,12), (6,0,15,28), (13,28,8,8) ])
-                     , ("garden", Region [(2,2),(3,2),(4,2),(5,2),(6,1)] [(0,0,16,9)])
+    map = M.fromList [ ("bow",    Region [(4,2),(6,2),(7,4),(8,4)]       [(0,16,6,12), (6,0,15,28), (13,28,8,8) ] [])
+                     , ("garden", Region [(2,2),(3,2),(4,2),(5,2),(6,1)] [(0,0,16,9)]                             [])
                      ]
 
 
@@ -121,8 +122,8 @@ frame (Family regions _) regionMap = wholeBoard `S.difference` used
     used = foldr (S.union . tiles) S.empty regions
       where
         tiles :: (String, Tile) -> TileSet
-        tiles (name, (row, col)) = let Region _ areas = regionMap M.! name
-                                       translated     = map (offset row col) areas
+        tiles (name, (row, col)) = let areas      = rectangles $ regionMap M.! name
+                                       translated = map (offset row col) areas
                                    in  tilesFor translated
 
 
@@ -136,8 +137,9 @@ frameSquares :: Family -> M.Map RegionName Region -> SizeMap
 frameSquares (Family regions _) regionMap = without $ map toSizeMap regions
   where
     toSizeMap :: (RegionName, Tile) -> SizeMap
-    toSizeMap (name, _) = let Region squares _ = regionMap M.! name
-                          in  IM.fromList squares
+    toSizeMap (name, _) = IM.fromList
+                            $ SquareGame.Sandbox.squares
+                            $ regionMap M.! name
 
 
 data TrieF a = NodeF [(Square, a)]
