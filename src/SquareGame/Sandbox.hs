@@ -23,12 +23,12 @@ data Region = Region { squares    :: [(Size, Int)]
                      , rectangles :: [(Int, Int, Int, Int)]
                      } deriving (Generic, Show)
 
-data RegionMap = RegionMap (M.Map RegionName Region)
+data RegionMap = RegionMap { regionMap :: M.Map RegionName Region }
                  deriving (Generic, Show)
 
 
-regionMap :: RegionMap
-regionMap = RegionMap map
+globalRegionMap :: RegionMap
+globalRegionMap = RegionMap map
   where
     map = M.fromList [ ("bow",    Region [(4,2),(6,2),(7,4),(8,4)]       [(0,16,6,12), (6,0,15,28), (13,28,8,8) ])
                      , ("garden", Region [(2,2),(3,2),(4,2),(5,2),(6,1)] [(0,0,16,9)])
@@ -48,7 +48,7 @@ data Family = Family {
 
                      } deriving (Generic, Show)
 
-data FamilyMap = FamilyMap (M.Map FamilyName Family)
+data FamilyMap = FamilyMap { familyMap :: M.Map FamilyName Family }
                  deriving (Generic, Show)
 
 instance ToJSON   Family    where toEncoding = genericToEncoding defaultOptions
@@ -66,8 +66,8 @@ family1 = Family [ ("bow",    (15, 0))
                  ]
                  []
 
-familyMap :: FamilyMap
-familyMap = FamilyMap map
+globalFamilyMap :: FamilyMap
+globalFamilyMap = FamilyMap map
   where
     map = M.fromList [("family-1", family1)]
 
@@ -91,8 +91,8 @@ without = removeZeroes . foldl (IM.unionWith (-)) allSizes
     removeZeroes = IM.filter (/= 0)
 
 
-tilesFor :: Region -> TileSet
-tilesFor (Region _ areas) = foldr S.union S.empty $ for <$> areas
+tilesFor :: [(Int, Int, Int, Int)] -> TileSet
+tilesFor rectangles = foldr S.union S.empty $ for <$> rectangles
   where
     for (row, col, height, width) = S.fromList [ (row+r, col+c) | r <- [0..height-1],
                                                                   c <- [0..width -1]]
@@ -109,28 +109,25 @@ squareTiles = M.fromList [ (square, for square) | square <- squares ]
                                                          c <- [0..size-1]]
 
 
---- The tiles left over after the two symmetrical regions in family 1 squares are carved out
-{-
-family1 :: TileSet
-family1 = wholeBoard `S.difference` used
+--- The tiles left over after the square's symmetrical regions are carved out
+frame :: Family -> M.Map RegionName Region -> TileSet
+frame (Family regions _) regionMap = wholeBoard `S.difference` used
   where
     wholeBoard :: TileSet
     wholeBoard = tilesFor [(0,0,36,36)]
 
     used :: TileSet
-    used = S.union garden' bow'
+    used = foldr (S.union . tiles) S.empty regions
       where
-        garden' = tilesFor $ offset 0  0 garden
-        bow'    = tilesFor $ offset 15 0 bow
+        tiles :: (String, Tile) -> TileSet
+        tiles (name, (row, col)) = let Region _ areas = regionMap M.! name
+                                       translated     = map (offset row col) areas
+                                   in  tilesFor translated
 
 
--- Translate a region away from the top-left corner
-offset :: SRow -> SCol -> Region -> Region
-offset dr dc = map f
-  where
-    f (row, col, height, width) = (row+dr, col+dc, height, width)
-
--}
+-- Translate a rectangle away from the top-left corner
+offset :: SRow -> SCol -> (Int, Int, Int, Int) -> (Int, Int, Int, Int)
+offset dr dc (row, col, height, width) = (row+dr, col+dc, height, width)
 
 
 data TrieF a = NodeF [(Square, a)]
@@ -206,28 +203,23 @@ tiled tiles sizes = filter fullyTiled results
 --- IO ---
 ----------
 
-regions :: IO (Maybe RegionMap)
-regions = decodeFileStrict "regions.json"
+getRegions :: IO (Maybe RegionMap)
+getRegions = decodeFileStrict "regions.json"
 
-families :: IO (Maybe FamilyMap)
-families = decodeFileStrict "families.json"
+getFamilies :: IO (Maybe FamilyMap)
+getFamilies = decodeFileStrict "families.json"
 
 
 {-
-    λ> familyMap
-    FamilyMap (fromList [("family-1",Family {symmetricRegions = [("bow",(15,0)),("garden",(0,0))], frame = [], frameSquares = [], frameTilings = []})])
+    λ> import Data.Maybe
+    λ> regions  <- regionMap . fromJust <$> getRegions
+    λ> families <- familyMap . fromJust <$> getFamilies
 
-    λ> encodeFile "families.json" familyMap
+    λ> frame (families M.! "family-1") regions
+    fromList [(0,9),(0,10),(0,11), ..., (27,33),(27,34),(27,35)]
 
-    λ> families
-    Just (FamilyMap (fromList [("family-1",Family {symmetricRegions = [("bow",(15,0)),("garden",(0,0))], frame = [], frameSquares = [], frameTilings = []})]))
-
-
-    ------
-    λ> import Data.Aeson
-    λ> encodeFile "regions.json" regionMap
-    λ> regions
-    Just (RegionMap (fromList [("bow",Region {squares = [(4,2),(6,2),(7,4),(8,4)], rectangles = [(0,16,6,12),(6,0,15,28),(13,28,8,8)]}),("garden",Region {squares = [(2,2),(3,2),(4,2),(5,2),(6,1)], rectangles = [(0,0,16,9)]})]))
+    λ> length $ frame (families M.! "family-1") regions
+    596
 
 
     ------
