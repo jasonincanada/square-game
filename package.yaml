@@ -27,6 +27,7 @@ dependencies:
 - lens
 - mtl
 - random
+- aeson
 
 library:
   source-dirs: src

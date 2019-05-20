@@ -1,4 +1,5 @@
 {-# Language DeriveFunctor #-}
+{-# Language DeriveGeneric #-}
 
 {- Sandbox.hs  - Sandbox enviro for naming/addressing all N=8 partridge squares -}
 
@@ -7,13 +8,27 @@ module SquareGame.Sandbox where
 import qualified Data.IntMap as IM
 import qualified Data.Map    as M
 import qualified Data.Set    as S
+import           Data.Aeson
+import           GHC.Generics
 import           SquareGame
 
 type Height      = Int
 type Width       = Int
 type Rectangle   = (SRow, SCol, Height, Width)
-type Region      = [Rectangle]
 type SizeMap     = IM.IntMap Int
+
+data Region = Region { name       :: String
+                     , squares    :: [(Size, Int)]
+                     , rectangles :: [(Int, Int, Int, Int)]
+                     } deriving (Generic, Show)
+
+instance ToJSON Region where
+  toEncoding = genericToEncoding defaultOptions
+
+instance FromJSON Region
+
+bow    = Region "bow"    [(4,2),(6,2),(7,4),(8,4)]       [(0,16,6,12), (6,0,15,28), (13,28,8,8) ]
+garden = Region "garden" [(2,2),(3,2),(4,2),(5,2),(6,1)] [(0,0,16,9)]
 
 
 --allSquares :: [Size]
@@ -35,19 +50,8 @@ without = removeZeroes . foldl (IM.unionWith (-)) allSizes
     removeZeroes = IM.filter (/= 0)
 
 
-topLeftTile, top2x2 :: Region
-topLeftTile = [ (0,0,1,1) ]
-top2x2      = [ (0,0,2,2) ]
-
--- Known symmetrically-tileable regions
-bow, garden :: Region
-garden      = [ (0,0,16,9) ]
-bow         = [ (0 ,16,6 ,12)
-              , (6 ,0 ,15,28)
-              , (13,28,8 ,8 ) ]
-
 tilesFor :: Region -> TileSet
-tilesFor areas = foldr S.union S.empty $ for <$> areas
+tilesFor (Region _ _ areas) = foldr S.union S.empty $ for <$> areas
   where
     for (row, col, height, width) = S.fromList [ (row+r, col+c) | r <- [0..height-1],
                                                                   c <- [0..width -1]]
@@ -65,6 +69,7 @@ squareTiles = M.fromList [ (square, for square) | square <- squares ]
 
 
 -- The tiles left over after the two symmetrical regions in family 1 squares are carved out
+{-
 family1 :: TileSet
 family1 = wholeBoard `S.difference` used
   where
@@ -84,6 +89,7 @@ offset dr dc = map f
   where
     f (row, col, height, width) = (row+dr, col+dc, height, width)
 
+-}
 
 
 data TrieF a = NodeF [(Square, a)]
@@ -155,7 +161,22 @@ tiled tiles sizes = filter fullyTiled results
         tileCount (_, _, size) = size * size
 
 
+----------
+--- IO ---
+----------
+
+regions :: IO (Maybe [Region])
+regions = decodeFileStrict "regions.json"
+
+
 {-
+    λ> import Data.Aeson
+    λ> encodeFile "regions.json" [bow, garden]
+    λ> regions
+    Just [Region {name = "bow", squares = [(4,2),(6,2),(7,4),(8,4)], rectangles = [(0,16,6,12),(6,0,15,28),(13,28,8,8)]},Region {name = "garden", squares = [(2,2),(3,2),(4,2),(5,2),(6,1)], rectangles = [(0,0,16,9)]}]
+
+
+    ------
     λ> tiled family1 (without [bowSizes, gardenSizes])
     [fromList [(0,9,7),(0,16,7),(0,23,7),(0,30,6),(6,30,6),(7,9,8),(7,17,8),(7,25,5),(12,25,3),(12,28,8),(15,9,1),(15,10,6),(16,0,5),(16,5,5),(20,28,8)]]
 
