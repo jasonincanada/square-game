@@ -21,7 +21,7 @@ type RegionName  = String
 type FamilyName  = String
 
 data Region = Region { squares    :: [(Size, Int)]
-                     , rectangles :: [(Int, Int, Int, Int)]
+                     , rectangles :: [Rectangle]
                      } deriving (Generic, Show)
 
 data RegionMap = RegionMap { regionMap :: M.Map RegionName Region }
@@ -92,7 +92,7 @@ without = removeZeroes . foldl (IM.unionWith (-)) allSizes
     removeZeroes = IM.filter (/= 0)
 
 
-tilesFor :: [(Int, Int, Int, Int)] -> TileSet
+tilesFor :: [Rectangle] -> TileSet
 tilesFor rectangles = foldr S.union S.empty $ for <$> rectangles
   where
     for (row, col, height, width) = S.fromList [ (row+r, col+c) | r <- [0..height-1],
@@ -127,7 +127,7 @@ frame (Family regions _) regionMap = wholeBoard `S.difference` used
 
 
 -- Translate a rectangle away from the top-left corner
-offset :: SRow -> SCol -> (Int, Int, Int, Int) -> (Int, Int, Int, Int)
+offset :: SRow -> SCol -> Rectangle -> Rectangle
 offset dr dc (row, col, height, width) = (row+dr, col+dc, height, width)
 
 
@@ -228,6 +228,7 @@ tileFrame name = do
   let squares = frameSquares (families M.! name) regions
 
   pure $ tiled tiles squares
+
 
 {-
     λ> tileFrame "family-1"
