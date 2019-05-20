@@ -242,7 +242,7 @@ updateRegion name region = do
 
   let updated = M.insert name region regions
 
-  encodeFile fileRegions updated
+  encodeFile fileRegions (RegionMap updated)
 
 
 -- Tile the frame for a family, saving to disk what it finds
@@ -266,10 +266,14 @@ tileRegion :: RegionName -> IO [Tiling]
 tileRegion name = do
   regions  <- regionMap . fromJust <$> getRegions
 
-  let region = regions M.! name
-  let tiles = tilesFor (rectangles region)
+  let region  = regions M.! name
+  let tiles   = tilesFor (rectangles region)
+  let found   = tiled tiles (IM.fromList $ SquareGame.Sandbox.squares region)
+  let updated = region { tilings = found   }
 
-  pure $ tiled tiles (IM.fromList $ SquareGame.Sandbox.squares region)
+  updateRegion name updated
+
+  pure found
 
 
 {-
