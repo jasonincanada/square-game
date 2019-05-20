@@ -44,8 +44,6 @@ data Family = Family {
 
                      -- These are determined by symmetricRegions, we'll compute them
                      -- and cache the results to file
-                     , frame            :: [Rectangle]
-                     , frameSquares     :: [(Size, Int)]
                      , frameTilings     :: [Tiling]
 
                      } deriving (Generic, Show)
@@ -66,8 +64,6 @@ family1 :: Family
 family1 = Family [ ("bow",    (15, 0))
                  , ("garden", (0, 0))
                  ]
-                 []
-                 []
                  []
 
 familyMap :: FamilyMap
