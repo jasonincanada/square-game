@@ -231,8 +231,25 @@ tileFrame name = do
 
   pure $ tiled tiles squares
 
+tileRegion :: RegionName -> IO [Tiling]
+tileRegion name = do
+  regions  <- regionMap . fromJust <$> getRegions
+
+  let region = regions M.! name
+  let tiles = tilesFor (rectangles region)
+
+  pure $ tiled tiles (IM.fromList $ SquareGame.Sandbox.squares region)
+
 
 {-
+    λ> tileRegion "bow"
+    [fromList [(0,16,4),(0,20,8),(4,16,4),...,(14,7,7),(14,14,7),(14,21,7)], ...]
+
+    λ> length <$> tileRegion "bow"
+    11
+
+
+    ------
     λ> tileFrame "family-1"
     [fromList [(0,9,7),(0,16,7),(0,23,7),(0,30,6),(6,30,6),(7,9,8),(7,17,8),(7,25,5),(12,25,3),(12,28,8),(15,9,1),(15,10,6),(16,0,5),(16,5,5),(20,28,8)]]
 
