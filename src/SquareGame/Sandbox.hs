@@ -25,15 +25,6 @@ data Region = Region { squares    :: [(Size, Int)]
 data RegionMap = RegionMap (M.Map RegionName Region)
                  deriving (Generic, Show)
 
-instance ToJSON Region where
-  toEncoding = genericToEncoding defaultOptions
-
-instance FromJSON Region
-
-instance ToJSON RegionMap where
-  toEncoding = genericToEncoding defaultOptions
-
-instance FromJSON RegionMap
 
 regionMap :: RegionMap
 regionMap = RegionMap map
@@ -59,10 +50,12 @@ data Family = Family {
 
                      } deriving (Generic, Show)
 
-instance ToJSON Family where
-  toEncoding = genericToEncoding defaultOptions
-
+instance ToJSON   Family    where toEncoding = genericToEncoding defaultOptions
+instance ToJSON   Region    where toEncoding = genericToEncoding defaultOptions
+instance ToJSON   RegionMap where toEncoding = genericToEncoding defaultOptions
 instance FromJSON Family
+instance FromJSON Region
+instance FromJSON RegionMap
 
 family1 :: Family
 family1 = Family "1"
