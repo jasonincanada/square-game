@@ -246,7 +246,7 @@ updateRegion name region = do
 
 
 -- Tile the frame for a family, saving to disk what it finds
-tileFrame :: FamilyName -> IO [Tiling]
+tileFrame :: FamilyName -> IO ()
 tileFrame name = do
   regions  <- regionMap . fromJust <$> getRegions
   families <- familyMap . fromJust <$> getFamilies
@@ -259,10 +259,11 @@ tileFrame name = do
 
   updateFamily name updated
 
-  pure found
+  putStrLn $ "Found " ++ show (length found)
 
 
-tileRegion :: RegionName -> IO [Tiling]
+
+tileRegion :: RegionName -> IO ()
 tileRegion name = do
   regions  <- regionMap . fromJust <$> getRegions
 
@@ -273,7 +274,7 @@ tileRegion name = do
 
   updateRegion name updated
 
-  pure found
+  putStrLn $ "Found " ++ show (length found)
 
 
 {-
