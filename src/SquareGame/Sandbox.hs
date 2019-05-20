@@ -9,6 +9,7 @@ import qualified Data.IntMap as IM
 import qualified Data.Map    as M
 import qualified Data.Set    as S
 import           Data.Aeson
+import           Data.Maybe     (fromJust)
 import           GHC.Generics
 import           SquareGame
 
@@ -130,6 +131,15 @@ offset :: SRow -> SCol -> (Int, Int, Int, Int) -> (Int, Int, Int, Int)
 offset dr dc (row, col, height, width) = (row+dr, col+dc, height, width)
 
 
+--- The squares remaining after the symmetrical regions' squares are used
+frameSquares :: Family -> M.Map RegionName Region -> SizeMap
+frameSquares (Family regions _) regionMap = without $ map toSizeMap regions
+  where
+    toSizeMap :: (RegionName, Tile) -> SizeMap
+    toSizeMap (name, _) = let Region squares _ = regionMap M.! name
+                          in  IM.fromList squares
+
+
 data TrieF a = NodeF [(Square, a)]
                deriving (Functor)
 
@@ -209,8 +219,22 @@ getRegions = decodeFileStrict "regions.json"
 getFamilies :: IO (Maybe FamilyMap)
 getFamilies = decodeFileStrict "families.json"
 
+tileFrame :: FamilyName -> IO [Tiling]
+tileFrame name = do
+  regions  <- regionMap . fromJust <$> getRegions
+  families <- familyMap . fromJust <$> getFamilies
+
+  let tiles   = frame        (families M.! name) regions
+  let squares = frameSquares (families M.! name) regions
+
+  pure $ tiled tiles squares
 
 {-
+    λ> tileFrame "family-1"
+    [fromList [(0,9,7),(0,16,7),(0,23,7),(0,30,6),(6,30,6),(7,9,8),(7,17,8),(7,25,5),(12,25,3),(12,28,8),(15,9,1),(15,10,6),(16,0,5),(16,5,5),(20,28,8)]]
+
+
+    ------
     λ> import Data.Maybe
     λ> regions  <- regionMap . fromJust <$> getRegions
     λ> families <- familyMap . fromJust <$> getFamilies
