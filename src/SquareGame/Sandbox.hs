@@ -215,21 +215,52 @@ tiled tiles sizes = filter fullyTiled results
 --- IO ---
 ----------
 
+fileRegions, fileFamilies :: FilePath
+fileRegions  = "regions.json"
+fileFamilies = "families.json"
+
+-- Getters
 getRegions :: IO (Maybe RegionMap)
-getRegions = decodeFileStrict "regions.json"
+getRegions = decodeFileStrict fileRegions
 
 getFamilies :: IO (Maybe FamilyMap)
-getFamilies = decodeFileStrict "families.json"
+getFamilies = decodeFileStrict fileFamilies
 
+
+-- Updaters
+updateFamily :: FamilyName -> Family -> IO ()
+updateFamily name family = do
+  families <- familyMap . fromJust <$> getFamilies
+
+  let updated = M.insert name family families
+
+  encodeFile fileFamilies (FamilyMap updated)
+
+updateRegion :: RegionName -> Region -> IO ()
+updateRegion name region = do
+  regions  <- regionMap . fromJust <$> getRegions
+
+  let updated = M.insert name region regions
+
+  encodeFile fileRegions updated
+
+
+-- Tile the frame for a family, saving to disk what it finds
 tileFrame :: FamilyName -> IO [Tiling]
 tileFrame name = do
   regions  <- regionMap . fromJust <$> getRegions
   families <- familyMap . fromJust <$> getFamilies
 
-  let tiles   = frame        (families M.! name) regions
-  let squares = frameSquares (families M.! name) regions
+  let family  = families M.! name
+  let tiles   = frame        family regions
+  let squares = frameSquares family regions
+  let found   = tiled tiles squares
+  let updated = family { frameTilings = found }
 
-  pure $ tiled tiles squares
+  updateFamily name updated
+
+  pure found
+
 
 tileRegion :: RegionName -> IO [Tiling]
 tileRegion name = do
@@ -242,6 +273,17 @@ tileRegion name = do
 
 
 {-
+    λ> getFamilies
+    Just (FamilyMap {familyMap = fromList [("family-1",Family {symmetricRegions = [("bow",(15,0)),("garden",(0,0))], frameTilings = []})]})
+
+    λ> tileFrame "family-1"
+    [fromList [(0,9,7),(0,16,7),(0,23,7),(0,30,6),(6,30,6),(7,9,8),(7,17,8),(7,25,5),(12,25,3),(12,28,8),(15,9,1),(15,10,6),(16,0,5),(16,5,5),(20,28,8)]]
+
+    λ> getFamilies
+    Just (FamilyMap {familyMap = fromList [("family-1",Family {symmetricRegions = [("bow",(15,0)),("garden",(0,0))], frameTilings = [fromList [(0,9,7),(0,16,7),(0,23,7),(0,30,6),(6,30,6),(7,9,8),(7,17,8),(7,25,5),(12,25,3),(12,28,8),(15,9,1),(15,10,6),(16,0,5),(16,5,5),(20,28,8)]]})]})
+
+
+    ------
     λ> tileRegion "bow"
     [fromList [(0,16,4),(0,20,8),(4,16,4),...,(14,7,7),(14,14,7),(14,21,7)], ...]
 
