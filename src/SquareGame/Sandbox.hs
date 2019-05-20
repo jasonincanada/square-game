@@ -17,6 +17,7 @@ type Width       = Int
 type Rectangle   = (SRow, SCol, Height, Width)
 type SizeMap     = IM.IntMap Int
 type RegionName  = String
+type FamilyName  = String
 
 data Region = Region { squares    :: [(Size, Int)]
                      , rectangles :: [(Int, Int, Int, Int)]
@@ -38,9 +39,8 @@ regionMap = RegionMap map
 type Tiling = S.Set Square
 
 data Family = Family {
-                     -- familyName and symmetricRegions define the family
-                       familyName       :: String
-                     , symmetricRegions :: [(String, Tile)]
+                     -- symmetricRegions defines the family
+                     symmetricRegions :: [(String, Tile)]
 
                      -- These are determined by symmetricRegions, we'll compute them
                      -- and cache the results to file
@@ -50,21 +50,30 @@ data Family = Family {
 
                      } deriving (Generic, Show)
 
+data FamilyMap = FamilyMap (M.Map FamilyName Family)
+                 deriving (Generic, Show)
+
 instance ToJSON   Family    where toEncoding = genericToEncoding defaultOptions
+instance ToJSON   FamilyMap where toEncoding = genericToEncoding defaultOptions
 instance ToJSON   Region    where toEncoding = genericToEncoding defaultOptions
 instance ToJSON   RegionMap where toEncoding = genericToEncoding defaultOptions
 instance FromJSON Family
+instance FromJSON FamilyMap
 instance FromJSON Region
 instance FromJSON RegionMap
 
 family1 :: Family
-family1 = Family "1"
-                 [ ("bow",    (15, 0))
+family1 = Family [ ("bow",    (15, 0))
                  , ("garden", (0, 0))
                  ]
                  []
                  []
                  []
+
+familyMap :: FamilyMap
+familyMap = FamilyMap map
+  where
+    map = M.fromList [("family-1", family1)]
 
 
 --allSquares :: [Size]
@@ -104,7 +113,7 @@ squareTiles = M.fromList [ (square, for square) | square <- squares ]
                                                          c <- [0..size-1]]
 
 
--- The tiles left over after the two symmetrical regions in family 1 squares are carved out
+--- The tiles left over after the two symmetrical regions in family 1 squares are carved out
 {-
 family1 :: TileSet
 family1 = wholeBoard `S.difference` used
@@ -204,18 +213,18 @@ tiled tiles sizes = filter fullyTiled results
 regions :: IO (Maybe RegionMap)
 regions = decodeFileStrict "regions.json"
 
-families :: IO (Maybe [Family])
+families :: IO (Maybe FamilyMap)
 families = decodeFileStrict "families.json"
 
 
 {-
-    λ> family1
-    Family {familyName = "1", symmetricRegions = [("bow",(15,0)),("garden",(0,0))], frame = [], frameSquares = [], frameTilings = []}
+    λ> familyMap
+    FamilyMap (fromList [("family-1",Family {symmetricRegions = [("bow",(15,0)),("garden",(0,0))], frame = [], frameSquares = [], frameTilings = []})])
 
-    λ> encodeFile "families.json" [family1]
+    λ> encodeFile "families.json" familyMap
 
     λ> families
-    Just [Family {familyName = "1", symmetricRegions = [("bow",(15,0)),("garden",(0,0))], frame = [], frameSquares = [], frameTilings = []}]
+    Just (FamilyMap (fromList [("family-1",Family {symmetricRegions = [("bow",(15,0)),("garden",(0,0))], frame = [], frameSquares = [], frameTilings = []})]))
 
 
     ------
