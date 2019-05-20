@@ -31,6 +31,37 @@ bow    = Region "bow"    [(4,2),(6,2),(7,4),(8,4)]       [(0,16,6,12), (6,0,15,2
 garden = Region "garden" [(2,2),(3,2),(4,2),(5,2),(6,1)] [(0,0,16,9)]
 
 
+-- A tiling is a left-right/top-down placement of squares across a Region
+type Tiling = S.Set Square
+
+data Family = Family {
+                     -- familyName and symmetricRegions define the family
+                       familyName       :: String
+                     , symmetricRegions :: [(String, Tile)]
+
+                     -- These are determined by symmetricRegions, we'll compute them
+                     -- and cache the results to file
+                     , frame            :: [Rectangle]
+                     , frameSquares     :: [(Size, Int)]
+                     , frameTilings     :: [Tiling]
+
+                     } deriving (Generic, Show)
+
+instance ToJSON Family where
+  toEncoding = genericToEncoding defaultOptions
+
+instance FromJSON Family
+
+family1 :: Family
+family1 = Family "1"
+                 [ ("bow",    (15, 0))
+                 , ("garden", (0, 0))
+                 ]
+                 []
+                 []
+                 []
+
+
 --allSquares :: [Size]
 --allSquares = concat [ replicate i i | i <- [1..8] ]
 allSizes :: SizeMap
@@ -168,8 +199,21 @@ tiled tiles sizes = filter fullyTiled results
 regions :: IO (Maybe [Region])
 regions = decodeFileStrict "regions.json"
 
+families :: IO (Maybe [Family])
+families = decodeFileStrict "families.json"
+
 
 {-
+    λ> family1
+    Family {familyName = "1", symmetricRegions = [("bow",(15,0)),("garden",(0,0))], frame = [], frameSquares = [], frameTilings = []}
+
+    λ> encodeFile "families.json" [family1]
+
+    λ> families
+    Just [Family {familyName = "1", symmetricRegions = [("bow",(15,0)),("garden",(0,0))], frame = [], frameSquares = [], frameTilings = []}]
+
+
+    ------
     λ> import Data.Aeson
     λ> encodeFile "regions.json" [bow, garden]
     λ> regions
