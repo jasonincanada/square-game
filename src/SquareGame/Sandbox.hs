@@ -326,29 +326,51 @@ tileRegion name = do
   putStrLn $ "Found " ++ show (length found)
 
 
-allBoards :: FamilyName -> IO (M.Map String String)
+allBoards :: FamilyName -> IO [(String, String)]
 allBoards name = do
   regions  <- regionMap . fromJust <$> getRegions
   families <- familyMap . fromJust <$> getFamilies
 
-  let family    = families M.! name
-  let tileables = (name, frameTilings family) : map (getTilings regions) (symmetricRegions family)
-  let boards    = hylo coalg alg tileables
+  let family = families M.! name
+  let symms  = symmetricRegions family
 
-  pure $ M.fromList [ (path tiling, name) | (name, tiling) <- boards ]
+  let frameFactors  = framesToFactors name (frameTilings family)  -- :: [Factor]
+  let regionFactors = map (regionToFactors regions) symms         -- :: [[Factor]]
+  let factors       = frameFactors : regionFactors
+
+  -- sequence :: (Traversable t, Monad m) => t (m a) -> m (t a)
+  let sequenced     = sequence factors                            -- :: [[Factor]]
+  let boards        = map toBoard sequenced                       -- :: [(String, Tiling)]
+
+  pure $ [ (name, path tiling) | (name, tiling) <- boards ]
 
 
-getTilings :: M.Map RegionName Region -> (String, Tile) -> (String, [Tiling])
-getTilings regions (name, (row, col)) = let region     = regions M.! name
-                                            ts         = tilings region
-                                            translated = map (translate row col) ts
-                                        in  (name, translated)
+type Factor = (String, Int, Tiling)
 
-translate :: SRow -> SCol -> Tiling -> Tiling
-translate row col tiling = S.fromList list
+
+framesToFactors :: String -> [Tiling] -> [Factor]
+framesToFactors name tilings = [ (name, i, tiling) | (i, tiling) <- zip [1..] tilings ]
+
+regionToFactors :: M.Map RegionName Region -> (String, Tile) -> [Factor]
+regionToFactors regionMap (name, (row, col)) = factors
   where
-    list                = map adjust (S.toList tiling)
-    adjust (r, c, size) = (row+r, col+c, size)
+    factors = [ (name, i, translate row col tiling) | (i, tiling) <- zip [1..] ts ]
+    region  = regionMap M.! name
+    ts      = tilings region
+
+    translate :: SRow -> SCol -> Tiling -> Tiling
+    translate row col = S.map adjust
+      where
+        adjust (r, c, size) = (row+r, col+c, size)
+
+
+toBoard :: [Factor] -> (String, Tiling)
+toBoard factors = foldr f ("", S.empty) factors
+  where
+    f :: Factor -> (String, Tiling) -> (String, Tiling)
+    f (name, index, tiling) (name', tiling')
+      | null name'   = (name ++ "-" ++ show index                ,         tiling        )
+      | otherwise    = (name ++ "-" ++ show index ++ " " ++ name', S.union tiling tiling')
 
 
 path :: Tiling -> String
@@ -406,15 +428,14 @@ showFamily name = do
 
 
     ------
-    λ> head . M.toList <$> allBoards "family-1"
-    ("225777645468853638316485548886687777","family-1-1 bow-1 garden-1")
+    λ> head <$> allBoards "family-1"
+    ("family-1-1 bow-1 garden-1","225777645468853638316485548886687777")
 
-    λ> last . M.toList <$> allBoards "family-1"
-    ("637776354688545382216845548886687777","family-1-1 bow-11 garden-24")
+    λ> last <$> allBoards "family-1"
+    ("family-1-1 bow-11 garden-24","637776354688545382216845548886687777")
 
-    -- No board symmetries yet so manually multiply by 8
-    λ> (*8) . M.size <$> allBoards "family-1"
-    2112
+    λ> length <$> allBoards "family-1"
+    264
 
 
     ------
