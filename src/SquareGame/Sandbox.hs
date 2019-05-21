@@ -10,6 +10,7 @@ import qualified Data.Map    as M
 import qualified Data.Set    as S
 import           Data.Aeson
 import           Data.Maybe     (fromJust)
+import           Text.Printf    (printf)
 import           GHC.Generics
 import           SquareGame
 
@@ -277,7 +278,48 @@ tileRegion name = do
   putStrLn $ "Found " ++ show (length found)
 
 
+-- Info
+
+--
+showFamily :: FamilyName -> IO ()
+showFamily name = do
+  families <- familyMap . fromJust <$> getFamilies
+  regions  <- regionMap . fromJust <$> getRegions
+
+  let g (name, _)  = length $ tilings $ regions M.! name
+
+  let family       = families M.! name
+  let symmetrics   = symmetricRegions family
+  let frameTCount  = length  $ frameTilings family
+  let regionTCount = product $ map g symmetrics
+
+  let f (name, (row, col)) = printf " %3d tilings of region: %s @%d,%d"
+                                    (length $ tilings $ regions M.! name)
+                                    name
+                                    row
+                                    col
+
+  putStrLn $ printf "%s:" name
+  putStrLn $ printf " %3d tilings of the frame" frameTCount
+  putStr   $ unlines $ map f symmetrics
+  putStrLn $ "   8 symmetries of the board"
+  putStrLn $ "------------------------------"
+  putStrLn $ printf "%4d total squares" (8 * frameTCount * regionTCount)
+
+
+
 {-
+    λ> showFamily "family-1"
+    family-1:
+       1 tilings of the frame
+      11 tilings of region: bow @15,0
+      24 tilings of region: garden @0,0
+       8 symmetries of the board
+    ------------------------------
+    2112 total squares
+
+
+    ------
     λ> getFamilies
     Just (FamilyMap {familyMap = fromList [("family-1",Family {symmetricRegions = [("bow",(15,0)),("garden",(0,0))], frameTilings = []})]})
 
