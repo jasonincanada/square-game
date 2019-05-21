@@ -212,11 +212,11 @@ coalgebra (tiles, sizes)
 
 type Algebra f a = f a -> a
 
-algebra :: Algebra TrieF [S.Set Square]
+algebra :: Algebra TrieF [Tiling]
 algebra (NodeF []    ) = [S.empty]
 algebra (NodeF boards) = concatMap addsquare boards
   where
-    addsquare :: (Square, [S.Set Square]) -> [S.Set Square]
+    addsquare :: (Square, [Tiling]) -> [Tiling]
     addsquare (square, sets) = map (S.insert square) sets
 
 hylo :: Functor f => Coalgebra f a -> Algebra f b -> a -> b
@@ -225,17 +225,18 @@ hylo coalg alg = alg . (fmap $ hylo coalg alg) . coalg
 
 -- Find all placements that cover the whole region being tiled
 -- (not necessarily using all available squares)
-tiled :: TileSet -> SizeMap -> [S.Set Square]
+tiled :: TileSet -> SizeMap -> [Tiling]
 tiled tiles sizes = filter fullyTiled results
   where
-    results :: [S.Set Square]
+    results :: [Tiling]
     results = hylo coalgebra algebra (tiles, sizes)
 
-    fullyTiled :: S.Set Square -> Bool
+    fullyTiled :: Tiling -> Bool
     fullyTiled squares = totalTiles == S.size tiles
       where
         totalTiles             = sum $ map tileCount (S.elems squares)
         tileCount (_, _, size) = size * size
+
 
 
 ----------
