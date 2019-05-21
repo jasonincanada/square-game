@@ -225,6 +225,26 @@ rho = S.map (\(row, col, size) -> (col, side - row - size, size))
   where
     side = 36 -- For n=8
 
+-- Call these successively to return the 8 symmetries of the board
+d4 :: [(String, Tiling -> Tiling)]
+d4 = [ ("e"  , id      )
+     , ("r"  , rho     )
+     , ("r2" , rho     )
+     , ("r3" , rho     )
+     , ("t"  , tau.rho )
+     , ("rt" , rho     )
+     , ("r2t", rho     )
+     , ("r3t", rho     ) ]
+
+getSymmetries :: (String, Tiling) -> [(String, Tiling)]
+getSymmetries (prefix, tiling) = go d4 tiling
+  where
+    go :: [(String, Tiling -> Tiling)] -> Tiling -> [(String, Tiling)]
+    go [] _                    = []
+    go ((name, f):rest) tiling = let new = f tiling
+                                 in  (prefix ++ " " ++ name, new) : go rest new
+
+
 
 -- Get the ith tiling of a region from disk
 region :: RegionName -> Int -> IO Tiling
@@ -316,7 +336,11 @@ allBoards name = do
   let sequenced     = sequence factors                            -- :: [[Factor]]
   let boards        = map toBoard sequenced                       -- :: [(String, Tiling)]
 
-  pure $ [ (name, path tiling) | (name, tiling) <- boards ]
+  -- This isn't the most efficient way to do this since it rotates the frame
+  -- every time redundantly, but for our dataset size it's not a bottleneck
+  let allSymmetries = concatMap getSymmetries boards
+
+  pure $ [ (name, path tiling) | (name, tiling) <- allSymmetries ]
 
 
 type Factor = (String, Int, Tiling)
@@ -402,14 +426,17 @@ showFamily name = do
 
 
     ------
-    λ> head <$> allBoards "family-1"
-    ("family-1-1 bow-1 garden-1","225777645468853638316485548886687777")
-
-    λ> last <$> allBoards "family-1"
-    ("family-1-1 bow-11 garden-24","637776354688545382216845548886687777")
+    λ> (!! 0) <$> allBoards "family-1"
+    λ> (!! 1) <$> allBoards "family-1"
+    λ> (!! 7) <$> allBoards "family-1"
+    λ> (!! 8) <$> allBoards "family-1"
+    ("family-1-1 bow-1 garden-1 e","225777645468853638316485548886687777")
+    ("family-1-1 bow-1 garden-1 r","785334422655578187676447887673588866")
+    ("family-1-1 bow-1 garden-1 r3t","777788866848556843618833564577746522")
+    ("family-1-1 bow-1 garden-2 e","225777645468856338316485548886687777")
 
     λ> length <$> allBoards "family-1"
-    264
+    2112
 
 
     ------
