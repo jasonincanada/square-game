@@ -238,6 +238,27 @@ tiled tiles sizes = filter fullyTiled results
         tileCount (_, _, size) = size * size
 
 
+-- Transpose (flip along the row==col diagonal)
+tau :: Tiling -> Tiling
+tau = S.map t
+  where
+    t :: Square -> Square
+    t (row, col, size) = (col, row, size)
+
+-- Rotate clockwise a quarter turn
+rho :: Tiling -> Tiling
+rho = S.map (\(row, col, size) -> (col, side - row, size))
+  where
+    side = 36 -- For n=8
+
+
+-- Get the ith tiling of a region from disk
+region :: RegionName -> Int -> IO Tiling
+region name i = do
+  regions <- regionMap . fromJust <$> getRegions
+
+  return $ (tilings $ regions M.! name) !! (i-1)
+
 
 ----------
 --- IO ---
@@ -366,6 +387,25 @@ showFamily name = do
 
 
 {-
+    λ> garden <- region "garden" 1
+    λ> garden
+    fromList [(0,0,2),(0,2,2),(0,4,5),(2,0,4),(5,4,5),(6,0,4),(10,0,3),(10,3,6),(13,0,3)]
+
+    λ> tau garden
+    fromList [(0,0,2),(0,2,4),(0,6,4),(0,10,3),(0,13,3),(2,0,2),(3,10,6),(4,0,5),(4,5,5)]
+    λ> rho garden
+    fromList [(0,23,3),(0,26,3),(0,30,4),(0,34,4),(0,36,2),(2,36,2),(3,26,6),(4,31,5),(4,36,5)]
+
+    λ> (tau . tau) garden == garden
+    True
+
+    λ> garden == iterate rho garden !! 3
+    False
+    λ> garden == iterate rho garden !! 4
+    True
+
+
+    ------
     λ> head . M.toList <$> allBoards "family-1"
     ("225777645468853638316485548886687777","family-1-1 bow-1 garden-1")
 
