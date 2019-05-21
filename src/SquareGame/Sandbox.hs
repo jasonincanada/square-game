@@ -142,6 +142,32 @@ frameSquares (Family regions _) regionMap = without $ map toSizeMap regions
                             $ SquareGame.Sandbox.squares
                             $ regionMap M.! name
 
+data BoardF a = NodeBoardF [(Int, String, Tiling, a)]
+                deriving (Functor)
+
+type SeedCoalg = [(String, [Tiling])]
+type SeedAlg   = [(String, Tiling)]
+
+coalg :: Coalgebra BoardF SeedCoalg
+coalg []                     = NodeBoardF []
+coalg ((name, tilings):rest) = NodeBoardF subs
+  where
+    subs = [ (i, name, tiling, rest) | (i, tiling) <- zip [1..] tilings ]
+
+
+alg :: Algebra BoardF SeedAlg
+alg (NodeBoardF [])     = [("", S.empty)]
+alg (NodeBoardF boards) = concatMap f boards
+  where
+    f :: (Int, String, Tiling, SeedAlg) -> SeedAlg
+    f (i, name, tiling, list) = map (g i name tiling) list
+
+    g :: Int -> String -> Tiling -> (String, Tiling) -> (String, Tiling)
+    g i name tiling (suffix, tiling')
+      | null suffix = (printf "%s-%d"    name i       , S.union tiling tiling')
+      | otherwise   = (printf "%s-%d %s" name i suffix, S.union tiling tiling')
+
+
 
 data TrieF a = NodeF [(Square, a)]
                deriving (Functor)
@@ -278,6 +304,36 @@ tileRegion name = do
   putStrLn $ "Found " ++ show (length found)
 
 
+allBoards :: FamilyName -> IO (M.Map String String)
+allBoards name = do
+  regions  <- regionMap . fromJust <$> getRegions
+  families <- familyMap . fromJust <$> getFamilies
+
+  let family    = families M.! name
+  let tileables = (name, frameTilings family) : map (getTilings regions) (symmetricRegions family)
+  let boards    = hylo coalg alg tileables
+
+  pure $ M.fromList [ (path tiling, name) | (name, tiling) <- boards ]
+
+
+getTilings :: M.Map RegionName Region -> (String, Tile) -> (String, [Tiling])
+getTilings regions (name, (row, col)) = let region     = regions M.! name
+                                            ts         = tilings region
+                                            translated = map (translate row col) ts
+                                        in  (name, translated)
+
+translate :: SRow -> SCol -> Tiling -> Tiling
+translate row col tiling = S.fromList list
+  where
+    list                = map adjust (S.toList tiling)
+    adjust (r, c, size) = (row+r, col+c, size)
+
+
+path :: Tiling -> String
+path = concatMap (show . size) . S.toList
+
+
+
 -- Info
 
 --
@@ -309,6 +365,18 @@ showFamily name = do
 
 
 {-
+    λ> head . M.toList <$> allBoards "family-1"
+    ("225777645468853638316485548886687777","family-1-1 bow-1 garden-1")
+
+    λ> last . M.toList <$> allBoards "family-1"
+    ("637776354688545382216845548886687777","family-1-1 bow-11 garden-24")
+
+    -- No board symmetries yet so manually multiply by 8
+    λ> (*8) . M.size <$> allBoards "family-1"
+    2112
+
+
+    ------
     λ> showFamily "family-1"
     family-1:
        1 tilings of the frame
