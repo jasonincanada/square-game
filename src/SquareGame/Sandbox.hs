@@ -435,6 +435,9 @@ showFamily name = do
     ("family-1-1 bow-1 garden-1 r3t","777788866848556843618833564577746522")
     ("family-1-1 bow-1 garden-2 e","225777645468856338316485548886687777")
 
+    λ> last <$> allBoards "family-1"
+    ("family-1-1 bow-11 garden-24 r3t","777788866884556845221883456547776363")
+
     λ> length <$> allBoards "family-1"
     2112
 
