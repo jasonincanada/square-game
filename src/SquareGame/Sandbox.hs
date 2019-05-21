@@ -142,32 +142,6 @@ frameSquares (Family regions _) regionMap = without $ map toSizeMap regions
                             $ SquareGame.Sandbox.squares
                             $ regionMap M.! name
 
-data BoardF a = NodeBoardF [(Int, String, Tiling, a)]
-                deriving (Functor)
-
-type SeedCoalg = [(String, [Tiling])]
-type SeedAlg   = [(String, Tiling)]
-
-coalg :: Coalgebra BoardF SeedCoalg
-coalg []                     = NodeBoardF []
-coalg ((name, tilings):rest) = NodeBoardF subs
-  where
-    subs = [ (i, name, tiling, rest) | (i, tiling) <- zip [1..] tilings ]
-
-
-alg :: Algebra BoardF SeedAlg
-alg (NodeBoardF [])     = [("", S.empty)]
-alg (NodeBoardF boards) = concatMap f boards
-  where
-    f :: (Int, String, Tiling, SeedAlg) -> SeedAlg
-    f (i, name, tiling, list) = map (g i name tiling) list
-
-    g :: Int -> String -> Tiling -> (String, Tiling) -> (String, Tiling)
-    g i name tiling (suffix, tiling')
-      | null suffix = (printf "%s-%d"    name i       , S.union tiling tiling')
-      | otherwise   = (printf "%s-%d %s" name i suffix, S.union tiling tiling')
-
-
 
 data TrieF a = NodeF [(Square, a)]
                deriving (Functor)
