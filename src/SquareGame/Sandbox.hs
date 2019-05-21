@@ -247,7 +247,7 @@ tau = S.map t
 
 -- Rotate clockwise a quarter turn
 rho :: Tiling -> Tiling
-rho = S.map (\(row, col, size) -> (col, side - row, size))
+rho = S.map (\(row, col, size) -> (col, side - row - size, size))
   where
     side = 36 -- For n=8
 
@@ -394,7 +394,7 @@ showFamily name = do
     λ> tau garden
     fromList [(0,0,2),(0,2,4),(0,6,4),(0,10,3),(0,13,3),(2,0,2),(3,10,6),(4,0,5),(4,5,5)]
     λ> rho garden
-    fromList [(0,23,3),(0,26,3),(0,30,4),(0,34,4),(0,36,2),(2,36,2),(3,26,6),(4,31,5),(4,36,5)]
+    fromList [(0,20,3),(0,23,3),(0,26,4),(0,30,4),(0,34,2),(2,34,2),(3,20,6),(4,26,5),(4,31,5)]
 
     λ> (tau . tau) garden == garden
     True
