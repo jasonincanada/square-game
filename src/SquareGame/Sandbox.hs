@@ -57,9 +57,13 @@ data Family = Family {
 data FamilyMap = FamilyMap { familyMap :: M.Map FamilyName Family }
                  deriving (Generic, Show)
 
+family1 = Family [ ("bow",       (15, 0)), ("garden",     (0, 0))                        ] []
+family2 = Family [ ("2-praline", (0, 0) ), ("whitehouse", (0, 16)), ("flower", (13, 14)) ] []
+family3 = Family [ ("1-praline", (0, 0) ), ("flower",     (13, 0))                       ] []
+
+
 data BoardNames = BoardNames { nameMap :: M.Map String [String] }
                   deriving (Generic, Show)
-
 
 instance ToJSON   BoardNames where toEncoding = genericToEncoding defaultOptions
 instance ToJSON   Family     where toEncoding = genericToEncoding defaultOptions
@@ -71,25 +75,6 @@ instance FromJSON Family
 instance FromJSON FamilyMap
 instance FromJSON Region
 instance FromJSON RegionMap
-
-family1 :: Family
-family1 = Family [ ("bow",    (15, 0))
-                 , ("garden", (0, 0))
-                 ]
-                 []
-
-family2 :: Family
-family2 = Family [ ("2-praline", (0, 0) )
-                 , ("whitehouse", (0, 16))
-                 , ("flower", (13, 14))
-                 ]
-                 []
-
-family3 :: Family
-family3 = Family [ ("1-praline", (0, 0) )
-                 , ("flower", (13, 0))
-                 ]
-                 []
 
 
 --allSquares :: [Size]
