@@ -33,12 +33,11 @@ data RegionMap = RegionMap { regionMap :: M.Map RegionName Region }
                  deriving (Generic, Show)
 
 
-globalRegionMap :: RegionMap
-globalRegionMap = RegionMap map
-  where
-    map = M.fromList [ ("bow",    Region [(4,2),(6,2),(7,4),(8,4)]       [(0,16,6,12), (6,0,15,28), (13,28,8,8) ] [])
-                     , ("garden", Region [(2,2),(3,2),(4,2),(5,2),(6,1)] [(0,0,16,9)]                             [])
-                     ]
+bow        = Region [(4,2),(6,2),(7,4),(8,4)]       [(0,16,6,12), (6,0,15,28), (13,28,8,8) ] []
+garden     = Region [(2,2),(3,2),(4,2),(5,2),(6,1)] [(0,0,16,9)]                             []
+praline2   = Region [(2,2),(4,1),(6,2)]             [(0,0,6,16)]                             []
+whitehouse = Region [(4,2),(5,4),(8,2)]             [(0,0,13,20)]                            []
+flower     = Region [(3,2),(6,1),(7,4),(8,4)]       [(0,0,23,22)]                            []
 
 
 -- A tiling is a left-right/top-down placement of squares across a Region
@@ -78,10 +77,12 @@ family1 = Family [ ("bow",    (15, 0))
                  ]
                  []
 
-globalFamilyMap :: FamilyMap
-globalFamilyMap = FamilyMap map
-  where
-    map = M.fromList [("family-1", family1)]
+family2 :: Family
+family2 = Family [ ("2-praline", (0, 0) )
+                 , ("whitehouse", (0, 16))
+                 , ("flower", (13, 14))
+                 ]
+                 []
 
 
 --allSquares :: [Size]
@@ -273,6 +274,9 @@ fileFamilies = "families.json"
 fileNames    = "names.json"
 
 -- Getters
+getRegion :: RegionName -> IO Region
+getRegion name = fromJust . M.lookup name <$> getRegions
+
 getRegions :: IO (M.Map RegionName Region)
 getRegions = regionMap . fromJust <$> decodeFileStrict fileRegions
 
@@ -448,6 +452,34 @@ nextBoard = do
 
 
 {-
+    λ> updateRegion "2-praline" praline2
+    λ> updateRegion "whitehouse" whitehouse
+    λ> updateRegion "flower" flower
+
+    λ> tileRegion "2-praline"
+    Found 6
+
+    λ> tileRegion "whitehouse"
+    Found 6
+
+    λ> tileRegion "flower"
+    Found 4
+
+    λ> tileFrame "family-2"
+    Found 1
+
+    λ> showFamily "family-2"
+    family-2:
+       1 tilings of the frame
+       6 tilings of region: 2-praline @0,0
+       6 tilings of region: whitehouse @0,16
+       4 tilings of region: flower @13,14
+       8 symmetries of the board
+    ------------------------------
+    1152 total squares
+
+
+    ------
     λ> nextBoard
     (23,"226648844547555513687786833886687777")
 
