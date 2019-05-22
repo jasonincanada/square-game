@@ -33,14 +33,6 @@ data RegionMap = RegionMap { regionMap :: M.Map RegionName Region }
                  deriving (Generic, Show)
 
 
-bow        = Region [(4,2),(6,2),(7,4),(8,4)]       [(0,16,6,12), (6,0,15,28), (13,28,8,8) ] []
-garden     = Region [(2,2),(3,2),(4,2),(5,2),(6,1)] [(0,0,16,9)]                             []
-praline1   = Region [(2,2),(4,1),(6,1)]             [(0,0,6,10)]                             []
-praline2   = Region [(2,2),(4,1),(6,2)]             [(0,0,6,16)]                             []
-whitehouse = Region [(4,2),(5,4),(8,2)]             [(0,0,13,20)]                            []
-flower     = Region [(3,2),(6,1),(7,4),(8,4)]       [(0,0,23,22)]                            []
-
-
 -- A tiling is a left-right/top-down placement of squares across a Region
 type Tiling = S.Set Square
 
@@ -57,9 +49,30 @@ data Family = Family {
 data FamilyMap = FamilyMap { familyMap :: M.Map FamilyName Family }
                  deriving (Generic, Show)
 
-family1 = Family [ ("bow",       (15, 0)), ("garden",     (0, 0))                        ] []
-family2 = Family [ ("2-praline", (0, 0) ), ("whitehouse", (0, 16)), ("flower", (13, 14)) ] []
-family3 = Family [ ("1-praline", (0, 0) ), ("flower",     (13, 0))                       ] []
+bow        = Region [(4,2),(6,2),(7,4),(8,4)]       [(0,16,6,12), (6,0,15,28), (13,28,8,8) ] []
+garden     = Region [(2,2),(3,2),(4,2),(5,2),(6,1)] [(0,0,16,9)]                             []
+praline1   = Region [(2,2),(4,1),(6,1)]             [(0,0,6,10)]                             []
+praline2   = Region [(2,2),(4,1),(6,2)]             [(0,0,6,16)]                             []
+whitehouse = Region [(4,2),(5,4),(8,2)]             [(0,0,13,20)]                            []
+flower     = Region [(3,2),(6,1),(7,4),(8,4)]       [(0,0,23,22)]                            []
+twoFour4   = Region [(2,2),(4,4)]                   [(0,0,18,4) ]                            []
+threeSix1' = Region [(3,2),(6,1)]                   [(0,0,6 ,9) ]                            []
+threeSix2  = Region [(3,2),(6,2)]                   [(0,0,15,6) ]                            []
+fourEight1 = Region [(4,2),(8,1)]                   [(0,0,12,8) ]                            []
+mouse      = Region [(4,2),(6,2),(8,1)]             [(0,0,12,14)]                            []
+fourEight4 = Region [(4,2),(8,4)]                   [(0,0,36,8) ]                            []
+threeSix1  = Region [(3,2),(6,1)]                   [(0,0,9 ,6) ]                            []
+foursEight1' = Region [(4,4),(8,1)]                 [(0,0,8,16) ]                            []
+
+
+family1 = Family [ ("bow",       (15, 0)), ("garden",        (0, 0))                            ] []
+family2 = Family [ ("2-praline", (0, 0) ), ("whitehouse",    (0, 16)), ("flower", (13, 14))     ] []
+family3 = Family [ ("1-praline", (0, 0) ), ("flower",        (13, 0))                           ] []
+family4 = Family [ ("4-two-four",(0, 0) ), ("1-three-six-t", (18, 0))                           ] []
+family5 = Family [ ("2-three-six",(0, 0)), ("mouse",         (0 , 6)), ("4-four-eight", (0, 28))] []
+family6 = Family [ ("1-three-six",(0, 0)), ("1-fours-eight-t", (0 ,20))]                          []
+family7 = Family [ ("1-three-six",(0, 0)), ("1-four-eight",  (0 ,20)), ("1-four-eight",(19, 15))] []
+family8 = Family [ ("1-three-six",(0, 0)), ("4-four-eight",  (0 ,28))                           ] []
 
 
 data BoardNames = BoardNames { nameMap :: M.Map String [String] }
@@ -444,6 +457,65 @@ nextBoard = do
 
 
 {-
+    λ> tileFrame "family-8"
+    Found 13
+
+    λ> showFamily "family-8"
+    family-8:
+      13 tilings of the frame
+       2 tilings of region: 1-three-six @0,0
+       5 tilings of region: 4-four-eight @0,28
+       8 symmetries of the board
+    ------------------------------
+    1040 total squares
+
+
+    λ> showFamily "family-7"
+    family-7:
+       1 tilings of the frame
+       2 tilings of region: 1-three-six @0,0
+       2 tilings of region: 1-four-eight @0,20
+       2 tilings of region: 1-four-eight @19,15
+       8 symmetries of the board
+    ------------------------------
+      64 total squares
+
+
+    λ> tileFrame "family-6"
+    Found 2
+
+    λ> showFamily "family-6"
+    family-6:
+       2 tilings of the frame
+       2 tilings of region: 1-three-six @0,0
+       3 tilings of region: 1-fours-eight-t @0,20
+       8 symmetries of the board
+    ------------------------------
+      96 total squares
+
+
+    λ> showFamily "family-5"
+    family-5:
+       1 tilings of the frame
+       3 tilings of region: 2-three-six @0,0
+       4 tilings of region: mouse @0,6
+       5 tilings of region: 4-four-eight @0,28
+       8 symmetries of the board
+    ------------------------------
+     480 total squares
+
+
+    λ> showFamily "family-4"
+    family-4:
+       1 tilings of the frame
+       5 tilings of region: 4-two-four @0,0
+       2 tilings of region: 1-three-six-t @18,0
+       8 symmetries of the board
+    ------------------------------
+      80 total squares
+
+
+    ------
     λ> nextBoard
     (47,"226885544673155544677886833886687777")
 
