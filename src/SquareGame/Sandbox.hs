@@ -258,7 +258,7 @@ getSymmetries (prefix, tiling) = go d4 tiling
 -- Get the ith tiling of a region from disk
 region :: RegionName -> Int -> IO Tiling
 region name i = do
-  regions <- regionMap . fromJust <$> getRegions
+  regions <- getRegions
 
   return $ (tilings $ regions M.! name) !! (i-1)
 
@@ -273,20 +273,20 @@ fileFamilies = "families.json"
 fileNames    = "names.json"
 
 -- Getters
-getRegions :: IO (Maybe RegionMap)
-getRegions = decodeFileStrict fileRegions
+getRegions :: IO (M.Map RegionName Region)
+getRegions = regionMap . fromJust <$> decodeFileStrict fileRegions
 
-getFamilies :: IO (Maybe FamilyMap)
-getFamilies = decodeFileStrict fileFamilies
+getFamilies :: IO (M.Map FamilyName Family)
+getFamilies = familyMap . fromJust <$> decodeFileStrict fileFamilies
 
-getBoardNames :: IO (Maybe BoardNames)
-getBoardNames = decodeFileStrict fileNames
+getBoardNames :: IO (M.Map String [String])
+getBoardNames = nameMap . fromJust <$> decodeFileStrict fileNames
 
 
 -- Updaters
 updateFamily :: FamilyName -> Family -> IO ()
 updateFamily name family = do
-  families <- familyMap . fromJust <$> getFamilies
+  families <- getFamilies
 
   let updated = M.insert name family families
 
@@ -294,7 +294,7 @@ updateFamily name family = do
 
 updateRegion :: RegionName -> Region -> IO ()
 updateRegion name region = do
-  regions  <- regionMap . fromJust <$> getRegions
+  regions  <- getRegions
 
   let updated = M.insert name region regions
 
@@ -304,8 +304,8 @@ updateRegion name region = do
 -- Tile the frame for a family, saving to disk what it finds
 tileFrame :: FamilyName -> IO ()
 tileFrame name = do
-  regions  <- regionMap . fromJust <$> getRegions
-  families <- familyMap . fromJust <$> getFamilies
+  regions  <- getRegions
+  families <- getFamilies
 
   let family  = families M.! name
   let tiles   = frame        family regions
@@ -321,7 +321,7 @@ tileFrame name = do
 
 tileRegion :: RegionName -> IO ()
 tileRegion name = do
-  regions  <- regionMap . fromJust <$> getRegions
+  regions  <- getRegions
 
   let region  = regions M.! name
   let tiles   = tilesFor (rectangles region)
@@ -336,7 +336,7 @@ tileRegion name = do
 -- Write some newly found board names to disk
 setBoardNames :: [(String, String)] -> IO ()
 setBoardNames names = do
-  boardNames <- nameMap . fromJust <$> getBoardNames
+  boardNames <- getBoardNames
 
   let updated = foldr add boardNames names
 
@@ -351,8 +351,8 @@ setBoardNames names = do
 
 allBoards :: FamilyName -> IO [(String, String)]
 allBoards name = do
-  regions  <- regionMap . fromJust <$> getRegions
-  families <- familyMap . fromJust <$> getFamilies
+  regions  <- getRegions
+  families <- getFamilies
 
   let family = families M.! name
   let symms  = symmetricRegions family & sortBy (comparing snd)
@@ -410,8 +410,8 @@ path = concatMap (show . size) . S.toList
 --
 showFamily :: FamilyName -> IO ()
 showFamily name = do
-  families <- familyMap . fromJust <$> getFamilies
-  regions  <- regionMap . fromJust <$> getRegions
+  families <- getFamilies
+  regions  <- getRegions
 
   let g (name, _)  = length $ tilings $ regions M.! name
 
@@ -437,7 +437,7 @@ showFamily name = do
 -- Get the next unnamed board
 nextBoard :: IO (Int, String)
 nextBoard = do
-  boardNames <- nameMap . fromJust <$> getBoardNames
+  boardNames <- getBoardNames
 
   let unnamed = M.filter null boardNames
   let first   = head $ M.keys unnamed
