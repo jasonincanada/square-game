@@ -10,7 +10,7 @@ import qualified Data.Map    as M
 import qualified Data.Set    as S
 import           Data.Aeson
 import           Data.Function  ((&))
-import           Data.List      (sortBy)
+import           Data.List      (elemIndex, sortBy)
 import           Data.Ord       (comparing)
 import           Data.Maybe     (fromJust)
 import           Text.Printf    (printf)
@@ -434,8 +434,25 @@ showFamily name = do
   putStrLn $ printf "%4d total squares" (8 * frameTCount * regionTCount)
 
 
+-- Get the next unnamed board
+nextBoard :: IO (Int, String)
+nextBoard = do
+  boardNames <- nameMap . fromJust <$> getBoardNames
+
+  let unnamed = M.filter null boardNames
+  let first   = head $ M.keys unnamed
+  let idx     = fromJust $ elemIndex first $ M.keys boardNames
+
+  pure (idx + 1, first)
+
+
 
 {-
+    λ> nextBoard
+    (23,"226648844547555513687786833886687777")
+
+
+    ------
     λ> names <- allBoards "family-1"
     λ> :t names
     names :: [(String, String)]
