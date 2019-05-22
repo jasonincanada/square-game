@@ -35,6 +35,7 @@ data RegionMap = RegionMap { regionMap :: M.Map RegionName Region }
 
 bow        = Region [(4,2),(6,2),(7,4),(8,4)]       [(0,16,6,12), (6,0,15,28), (13,28,8,8) ] []
 garden     = Region [(2,2),(3,2),(4,2),(5,2),(6,1)] [(0,0,16,9)]                             []
+praline1   = Region [(2,2),(4,1),(6,1)]             [(0,0,6,10)]                             []
 praline2   = Region [(2,2),(4,1),(6,2)]             [(0,0,6,16)]                             []
 whitehouse = Region [(4,2),(5,4),(8,2)]             [(0,0,13,20)]                            []
 flower     = Region [(3,2),(6,1),(7,4),(8,4)]       [(0,0,23,22)]                            []
@@ -81,6 +82,12 @@ family2 :: Family
 family2 = Family [ ("2-praline", (0, 0) )
                  , ("whitehouse", (0, 16))
                  , ("flower", (13, 14))
+                 ]
+                 []
+
+family3 :: Family
+family3 = Family [ ("1-praline", (0, 0) )
+                 , ("flower", (13, 0))
                  ]
                  []
 
@@ -452,6 +459,33 @@ nextBoard = do
 
 
 {-
+    λ> nextBoard
+    (47,"226885544673155544677886833886687777")
+
+    λ> family3
+    Family {symmetricRegions = [("1-praline",(0,0)),("flower",(13,0))], frameTilings = []}
+
+    λ> showFamily "family-3"
+    family-3:
+       1 tilings of the frame
+       4 tilings of region: 1-praline @0,0
+       4 tilings of region: flower @13,0
+       8 symmetries of the board
+    ------------------------------
+     128 total squares
+
+
+    ------
+    λ> names <- allBoards "family-2"
+    λ> length names
+    1152
+    λ> head names
+    ("family-2-1 2-praline-1 whitehouse-1 flower-1 e","226648844547555513687786833886687777")
+    λ> last names
+    ("family-2-1 2-praline-6 whitehouse-6 flower-4 r3t","777786883386688776375555514884662244")
+
+
+    ------
     λ> updateRegion "2-praline" praline2
     λ> updateRegion "whitehouse" whitehouse
     λ> updateRegion "flower" flower
