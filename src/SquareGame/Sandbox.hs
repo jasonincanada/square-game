@@ -57,10 +57,16 @@ data Family = Family {
 data FamilyMap = FamilyMap { familyMap :: M.Map FamilyName Family }
                  deriving (Generic, Show)
 
-instance ToJSON   Family    where toEncoding = genericToEncoding defaultOptions
-instance ToJSON   FamilyMap where toEncoding = genericToEncoding defaultOptions
-instance ToJSON   Region    where toEncoding = genericToEncoding defaultOptions
-instance ToJSON   RegionMap where toEncoding = genericToEncoding defaultOptions
+data BoardNames = BoardNames { nameMap :: M.Map String [String] }
+                  deriving (Generic, Show)
+
+
+instance ToJSON   BoardNames where toEncoding = genericToEncoding defaultOptions
+instance ToJSON   Family     where toEncoding = genericToEncoding defaultOptions
+instance ToJSON   FamilyMap  where toEncoding = genericToEncoding defaultOptions
+instance ToJSON   Region     where toEncoding = genericToEncoding defaultOptions
+instance ToJSON   RegionMap  where toEncoding = genericToEncoding defaultOptions
+instance FromJSON BoardNames
 instance FromJSON Family
 instance FromJSON FamilyMap
 instance FromJSON Region
@@ -264,6 +270,7 @@ region name i = do
 fileRegions, fileFamilies :: FilePath
 fileRegions  = "regions.json"
 fileFamilies = "families.json"
+fileNames    = "names.json"
 
 -- Getters
 getRegions :: IO (Maybe RegionMap)
@@ -271,6 +278,9 @@ getRegions = decodeFileStrict fileRegions
 
 getFamilies :: IO (Maybe FamilyMap)
 getFamilies = decodeFileStrict fileFamilies
+
+getBoardNames :: IO (Maybe BoardNames)
+getBoardNames = decodeFileStrict fileNames
 
 
 -- Updaters
