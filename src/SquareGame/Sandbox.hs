@@ -333,6 +333,22 @@ tileRegion name = do
   putStrLn $ "Found " ++ show (length found)
 
 
+-- Write some newly found board names to disk
+setBoardNames :: [(String, String)] -> IO ()
+setBoardNames names = do
+  boardNames <- nameMap . fromJust <$> getBoardNames
+
+  let updated = foldr add boardNames names
+
+  encodeFile fileNames (BoardNames updated)
+
+  where
+    add :: (String, String) -> M.Map String [String] -> M.Map String [String]
+    add (name, path) map
+      | name `elem` (map M.! path) = map
+      | otherwise                  = M.adjust (name:) path map
+
+
 allBoards :: FamilyName -> IO [(String, String)]
 allBoards name = do
   regions  <- regionMap . fromJust <$> getRegions
@@ -420,6 +436,18 @@ showFamily name = do
 
 
 {-
+    λ> names <- allBoards "family-1"
+    λ> :t names
+    names :: [(String, String)]
+    λ> length names
+    2112
+    λ> setBoardNames names
+    λ> boardmap <- nameMap . fromJust <$> getBoardNames
+    λ> boardmap M.! "225777645468853638316485548886687777"
+    ["family-1-1 garden-1 bow-1 e"]
+
+
+    ------
     λ> garden <- region "garden" 1
     λ> garden
     fromList [(0,0,2),(0,2,2),(0,4,5),(2,0,4),(5,4,5),(6,0,4),(10,0,3),(10,3,6),(13,0,3)]
