@@ -9,6 +9,9 @@ import qualified Data.IntMap as IM
 import qualified Data.Map    as M
 import qualified Data.Set    as S
 import           Data.Aeson
+import           Data.Function  ((&))
+import           Data.List      (sortBy)
+import           Data.Ord       (comparing)
 import           Data.Maybe     (fromJust)
 import           Text.Printf    (printf)
 import           GHC.Generics
@@ -326,7 +329,7 @@ allBoards name = do
   families <- familyMap . fromJust <$> getFamilies
 
   let family = families M.! name
-  let symms  = symmetricRegions family
+  let symms  = symmetricRegions family & sortBy (comparing snd)
 
   let frameFactors  = framesToFactors name (frameTilings family)  -- :: [Factor]
   let regionFactors = map (regionToFactors regions) symms         -- :: [[Factor]]
@@ -430,13 +433,13 @@ showFamily name = do
     λ> (!! 1) <$> allBoards "family-1"
     λ> (!! 7) <$> allBoards "family-1"
     λ> (!! 8) <$> allBoards "family-1"
-    ("family-1-1 bow-1 garden-1 e","225777645468853638316485548886687777")
-    ("family-1-1 bow-1 garden-1 r","785334422655578187676447887673588866")
-    ("family-1-1 bow-1 garden-1 r3t","777788866848556843618833564577746522")
-    ("family-1-1 bow-1 garden-2 e","225777645468856338316485548886687777")
+    ("family-1-1 garden-1 bow-1 e","225777645468853638316485548886687777")
+    ("family-1-1 garden-1 bow-1 r","785334422655578187676447887673588866")
+    ("family-1-1 garden-1 bow-1 r3t","777788866848556843618833564577746522")
+    ("family-1-1 garden-1 bow-2 e","225777645468853638316665584888487777")
 
     λ> last <$> allBoards "family-1"
-    ("family-1-1 bow-11 garden-24 r3t","777788866884556845221883456547776363")
+    ("family-1-1 garden-24 bow-11 r3t","777788866884556845221883456547776363")
 
     λ> length <$> allBoards "family-1"
     2112
