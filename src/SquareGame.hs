@@ -6,6 +6,7 @@ module SquareGame where
 
 import qualified Data.Map as M
 import qualified Data.Set as S
+import           Control.Applicative ((<|>))
 import           Control.Arrow  ((>>>))
 import           Control.Lens
 import           Data.Bifunctor (bimap)
@@ -313,7 +314,7 @@ parseSquare :: Parser Square
 parseSquare = do
   size   <- number <* space
   row    <- number <* char ','
-  column <- number
+  column <- number << char '\xD' <|> number
   return (row, column, size)
 
 
